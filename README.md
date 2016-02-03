@@ -4,7 +4,7 @@ Reload your babel-node app on JS source file changes. And do it *fast*.
 
 ## Why?
 
-If you're tired of using [`babel-node`](https://github.com/babel/babel/tree/master/packages/babel-cli) together with [`nodemon`](https://github.com/remy/nodemon) (or similar solution). The issue with an approach of using `babel-node` inside of a master process that restarts it frequently is the startup time of `babel-node` itself. `babel-watch` only starts babel in the parent process where it also starts a file watcher. The transpilation is performed in that process. On file-watcher events we can then start a pure `node` process and pass transpiled code from the parent process together with source maps. This allows us to avoid loading `babel` and all its deps every time we restart the process.
+If you're tired of using [`babel-node`](https://github.com/babel/babel/tree/master/packages/babel-cli) together with [`nodemon`](https://github.com/remy/nodemon) (or similar solution). The reason why the aforementioned setup performs so badly is the startup time of `babel-node` itself. `babel-watch` only starts `babel` in the "master" process where it also starts the file watcher. The transpilation is performed in that process too. On file-watcher events, it spawns a pure `node` process and passed transpiled code from the parent process together with the source maps. This allows us to avoid loading `babel` and all its deps every time we restart the JS script/app.
 
 ## I want it
 
