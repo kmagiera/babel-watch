@@ -49,7 +49,7 @@ Watch for all js files in current directory + all files under `src` directory bu
 
 Demo of `nodemod + babel-node` (on the left) and `babel-watch` reloading simple `express` based app:
 
-![](https://raw.githubusercontent.com/kmagiera/babel-watch/master/docs/video.gif)
+![](https://raw.githubusercontent.com/kmagiera/babel-watch/master/docs/demo.gif)
 
 ## Important information
 
