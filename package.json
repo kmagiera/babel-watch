@@ -1,0 +1,39 @@
+{
+  "name": "babel-watch",
+  "version": "1.0.0",
+  "description": "Reload your babel-node app on JS source file changes. And do it *fast*.",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kmagiera/babel-watch.git"
+  },
+  "keywords": [
+    "babel",
+    "nodemon",
+    "babel-node",
+    "watch"
+  ],
+  "author": {
+    "email": "krzys.magiera@gmail.com",
+    "name": "Krzysztof Magiera"
+  },
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "bugs": {
+    "url": "https://github.com/kmagiera/babel-watch/issues"
+  },
+  "homepage": "https://github.com/kmagiera/babel-watch#readme",
+  "dependencies": {
+    "chokidar": "^1.4.2",
+    "commander": "^2.9.0",
+    "lodash": "^4.2.1"
+  },
+  "peerDependencies": {
+    "babel-core": "^6.4.x"
+  },
+  "bin": {
+    "babel-watch": "./babel-watch.js"
+  }
+}
