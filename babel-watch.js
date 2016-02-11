@@ -5,7 +5,6 @@
 let chokidar = require('chokidar');
 let path = require('path');
 let babel = require('babel-core');
-let _ = require('lodash');
 let fs = require('fs');
 let fork = require('child_process').fork;
 let commander = require('commander');
@@ -38,7 +37,7 @@ if (program.ignore != null) ignore = babel.util.arrayify(program.ignore, babel.u
 let transpileExtensions = babel.util.canCompile.EXTENSIONS;
 
 if (program.extensions) {
-  transpileExtensions = _.concat(transpileExtensions, babel.util.arrayify(program.extensions));
+  transpileExtensions = transpileExtensions.concat(babel.util.arrayify(program.extensions));
 }
 
 if (program.watch.length === 0) {
@@ -121,7 +120,7 @@ function restartApp() {
     childApp.kill('SIGHUP');
     childApp = undefined;
   }
-  if (!_.isEmpty(errors)) {
+  if (Object.keys(errors).length != 0) {
     // There were some transpilation errors, don't start unless solved or invalid file is removed
     return;
   }
@@ -129,10 +128,6 @@ function restartApp() {
 
   app.send({ sources: sources, maps: maps, args: program.args});
   childApp = app;
-}
-
-function mtime(filename) {
-  return +fs.statSync(filename).mtime;
 }
 
 function shouldIgnore(filename) {
@@ -154,15 +149,14 @@ function compile(filename) {
   let optsManager = new babel.OptionManager;
 
   // merge in base options and resolve all the plugins and presets relative to this file
-  optsManager.mergeOptions(_.cloneDeep(transformOpts), 'base', null, path.dirname(filename));
+  optsManager.mergeOptions(transformOpts, 'base', null, path.dirname(filename));
 
   let opts = optsManager.init({ filename });
+  // Do not process config files since has already been done with the OptionManager
+  // calls above and would introduce duplicates.
+  opts.babelrc = false;
+  opts.sourceMap = "both";
+  opts.ast = false;
 
-  return babel.transformFileSync(filename, _.extend(opts, {
-    // Do not process config files since has already been done with the OptionManager
-    // calls above and would introduce duplicates.
-    babelrc: false,
-    sourceMap: "both",
-    ast:       false
-  }));
+  return babel.transformFileSync(filename, opts);
 }
