@@ -6,7 +6,10 @@ const chokidar = require('chokidar');
 const path = require('path');
 const babel = require('babel-core');
 const fs = require('fs');
+const os = require('os');
+const util = require('util');
 const fork = require('child_process').fork;
+const execSync = require('child_process').execSync;
 const commander = require('commander');
 
 const RESTART_COMMAND = 'rs';
@@ -25,13 +28,50 @@ program.option('-p, --plugins [string]', '', babel.util.list);
 program.option('-b, --presets [string]', '', babel.util.list);
 program.option('-w, --watch [dir]', 'Watch directory "dir" or files. Use once for each directory or file to watch', collect, []);
 program.option('-x, --exclude [dir]', 'Exclude matching directory/files from watcher. Use once for each directory or file.', collect, []);
+program.option('-L, --use-polling', 'In some filesystems watch events may not work correcly. This option enables "polling" which should mitigate this type of issues');
+program.option('-D, --disable-autowatch', 'Don\'t automatically start watching changes in files "required" by the program');
+program.option('-H, --disable-ex-handler', 'Disable source-map-enhanced uncaught exception handler. (you may want to use this option in case your app registers a custom uncaught exception handler)');
 
 const pkg = require('./package.json');
 program.version(pkg.version);
-program.usage('[options] [script.js]');
-program.description('babel-watch is a babel-js node app runner that lets you reload the app on JS source file changes');
+program.usage('[options] [script.js] [args]');
+program.description('babel-watch is a babel-js node app runner that lets you reload the app on JS source file changes.');
+program.on('--help', () => {
+  console.log(`\
+  About "autowatch":
+
+  "Autowatch" is the default behavior in babel-watch. Thanks to that mechanism babel-watch will automatically
+  detect files that are "required" (or "imported") by your program and start to watch for changes on those files.
+  It means that you no longer need to specify -w (--watch) option with a list of directories you are willing to
+  monitor changes in. You can disable "autowatch" with -D option or limit the list of files it will be enabled for
+  using the option -x (--exclude).
+
+  Babel.js configuration:
+
+  You may use some of the options listed above to customize plugins/presets and matching files that babel.js
+  is going to use while transpiling your app's source files but we recommend that you use .babelrc file as
+  babel-watch works with .babelrc just fine.
+
+  IMPORTANT:
+
+  babel-watch is meant to **only** be used during development. In order to support fast reload cycles it uses more
+  memory than plain node process. We recommend that when you deploy your app to production you pre-transpile source
+  files and run your application using node directly (avoid babel-node too for the same reasons).
+
+  Examples:
+
+    $ babel-watch server.js
+    $ babel-watch -x config server.js
+    $ babel-watch --presets es2015 server.js --port 8080
+
+  See more:
+
+  https://github.com/kmagiera/babel-watch
+  `);
+});
 program.parse(process.argv);
 
+const cwd = process.cwd();
 
 let only, ignore;
 
@@ -44,9 +84,13 @@ if (program.extensions) {
   transpileExtensions = transpileExtensions.concat(babel.util.arrayify(program.extensions));
 }
 
-if (program.watch.length === 0) {
-  console.error('Nothing to watch');
+const mainModule = program.args[0];
+if (!mainModule) {
+  console.error('Main script not specified');
   process.exit(1);
+}
+if (!mainModule.startsWith('.') && !mainModule.startsWith('/')) {
+  program.args[0] = path.join(cwd, mainModule);
 }
 
 const transformOpts = {
@@ -54,37 +98,33 @@ const transformOpts = {
   presets: program.presets,
 };
 
-let childApp;
-const cwd = process.cwd();
+let childApp, pipeFd, pipeFilename;
 
-const sources = {};
-const maps = {};
+const cache = {};
 const errors = {};
 
-const watcher = chokidar.watch(program.watch, {persistent: true, ignored: program.exclude})
-let watcherInitialized = false;
+let requiredFiles = {};
+
+const watcher = chokidar.watch(program.watch, {
+  persistent: true,
+  ignored: program.exclude,
+  ignoreInitial: true,
+  usePolling: program.usePolling,
+});
+let watcherInitialized = (program.watch.length === 0);
 
 process.on('SIGINT', function() {
   watcher.close();
   process.exit(1);
 });
 
-watcher.on('change', processAndRestart);
-watcher.on('add', processAndRestart);
+watcher.on('change', handleChange);
+watcher.on('add', handleChange);
+watcher.on('unlink', handleChange);
 
 watcher.on('ready', () => {
-  watcherInitialized = true;
-  restartApp();
-});
-
-watcher.on('unlink', file => {
-  const absoluteFile = path.join(cwd, file);
-  if (sources[absoluteFile]) {
-    delete sources[absoluteFile];
-    delete maps[absoluteFile];
-    delete errors[absoluteFile];
-  }
-  if (watcherInitialized) {
+  if (!watcherInitialized) {
+    watcherInitialized = true;
     restartApp();
   }
 });
@@ -95,53 +135,138 @@ watcher.on('error', error => {
 });
 
 // Restart the app when a sequence of keys has been pressed ('rs' by refault)
-process.stdin.resume();
-process.stdin.setEncoding('utf8');
-process.stdin.on('data', function(data) {
-  if (String(data).trim().toLowerCase() === RESTART_COMMAND) {
-    if (watcherInitialized) {
-      restartApp();
-    }
+const stdin = process.stdin;
+stdin.setEncoding('utf8');
+stdin.on('data', (data) => {
+  if (String(data).trim() === RESTART_COMMAND) {
+    restartApp();
   }
 });
 
-function processAndRestart(file) {
-  if (watcherInitialized && childApp) {
-    // kill app early as `compile` may take a while
-    console.log(">>> RESTARTING <<<");
-    childApp.kill('SIGHUP');
-    childApp = undefined;
-  }
-  const absoluteFile = path.join(cwd, file);
-  if (!shouldIgnore(absoluteFile)) {
-    try {
-      const compiled = compile(absoluteFile);
-      sources[absoluteFile] = compiled.code;
-      maps[absoluteFile] = compiled.map;
-      delete errors[absoluteFile];
-    } catch (err) {
-      console.error('Babel compilation error', err.stack);
-      errors[absoluteFile] = true;
-      return;
-    }
-  }
-  if (watcherInitialized) {
+function handleChange(file) {
+  const absoluteFile = file.startsWith('/') ? file : path.join(cwd, file);
+  const hadErrors = (errors[absoluteFile] !== undefined);
+  delete cache[absoluteFile];
+  delete errors[absoluteFile];
+
+  if (requiredFiles[absoluteFile] || hadErrors) {
+    // file is in use by the app, let's restart!
     restartApp();
   }
 }
 
-function restartApp() {
+function generateTempFilename() {
+  const now = new Date();
+  return path.join(os.tmpdir(), [
+    now.getYear(), now.getMonth(), now.getDate(),
+    '-',
+    process.pid,
+    '-',
+    (Math.random() * 0x100000000 + 1).toString(36),
+  ].join(''));
+}
+
+function handleFileLoad(filename, callback) {
+  const cached = cache[filename];
+  if (cached) {
+    const stats = fs.statSync(filename);
+    if (stats.mtime.getTime() === cached.mtime) {
+      callback(cache[filename].code, cache[filename].map);
+      return;
+    }
+  }
+  if (!shouldIgnore(filename)) {
+    compile(filename, (err, result) => {
+      if (err) {
+        console.error('Babel compilation error', err.stack);
+        errors[filename] = true;
+        return;
+      }
+      const stats = fs.statSync(filename);
+      cache[filename] = {
+        code: result.code,
+        map: result.map,
+        mtime: stats.mtime.getTime(),
+      };
+      delete errors[filename];
+      callback(result.code, result.map);
+    });
+  } else {
+    callback();
+  }
+}
+
+function killApp() {
   if (childApp) {
     childApp.kill('SIGHUP');
     childApp = undefined;
   }
+  if (pipeFd) {
+    fs.close(pipeFd); // silently close pipe fd - ignore callback
+    pipeFd = undefined;
+  }
+  if (pipeFilename) {
+    fs.unlink(pipeFilename); // silently remove old pipe file - ignore callback
+    pipeFilename = undefined;
+  }
+}
+
+function prepareRestart() {
+  if (watcherInitialized && childApp) {
+    // kill app early as `compile` may take a while
+    console.log(">>> RESTARTING <<<");
+    killApp();
+  }
+}
+
+function restartApp() {
+  if (!watcherInitialized) return;
+  prepareRestart();
   if (Object.keys(errors).length != 0) {
     // There were some transpilation errors, don't start unless solved or invalid file is removed
     return;
   }
-  const app = fork(__dirname + '/runner.js');
 
-  app.send({ sources: sources, maps: maps, args: program.args});
+  pipeFilename = generateTempFilename();
+
+  try {
+    execSync(`mkfifo -m 0666 ${pipeFilename}`);
+  } catch (e) {
+    console.error('Unable to create named pipe with mkfifo. Are you on linux/OSX?');
+    process.exit(1);
+  }
+
+  requiredFiles = {}
+  const app = fork(path.resolve(__dirname, 'runner.js'));
+
+  app.on('message', (data) => {
+    const filename = data.filename;
+    handleFileLoad(filename, (source, sourceMap) => {
+      requiredFiles[filename] = true;
+      if (!program.disableAutowatch) {
+        // use relative path for watch.add as it would let it chokidar reconsile excludes
+        const relativeFilename = path.relative(cwd, filename);
+        watcher.add(relativeFilename);
+      }
+      const sourceBuf = new Buffer(source || 0);
+      const mapBuf = new Buffer(sourceMap ? JSON.stringify(sourceMap) : 0);
+      const lenBuf = new Buffer(4);
+      lenBuf.writeUInt32BE(sourceBuf.length, 0);
+      fs.writeSync(pipeFd, lenBuf, 0, 4);
+      sourceBuf.length && fs.writeSync(pipeFd, sourceBuf, 0, sourceBuf.length);
+
+      lenBuf.writeUInt32BE(mapBuf.length, 0);
+      fs.writeSync(pipeFd, lenBuf, 0, 4);
+      mapBuf.length && fs.writeSync(pipeFd, mapBuf, 0, mapBuf.length);
+    });
+  });
+
+  app.send({
+    pipe: pipeFilename,
+    args: program.args,
+    handleUncaughtExceptions: !program.disableExHandler,
+  });
+  pipeFd = fs.openSync(pipeFilename, 'w');
   childApp = app;
 }
 
@@ -156,9 +281,7 @@ function shouldIgnore(filename) {
   }
 }
 
-const cache = {};
-
-function compile(filename) {
+function compile(filename, callback) {
   const optsManager = new babel.OptionManager;
 
   // merge in base options and resolve all the plugins and presets relative to this file
@@ -168,8 +291,12 @@ function compile(filename) {
   // Do not process config files since has already been done with the OptionManager
   // calls above and would introduce duplicates.
   opts.babelrc = false;
-  opts.sourceMap = "both";
+  opts.sourceMap = true;
   opts.ast = false;
 
-  return babel.transformFileSync(filename, opts);
+  return babel.transformFile(filename, opts, (err, result) => {
+    callback(err, result);
+  });
 }
+
+restartApp();
