@@ -27,6 +27,7 @@ program.option('-x, --exclude [dir]', 'Exclude matching directory/files from wat
 const pkg = require('./package.json');
 program.version(pkg.version);
 program.usage('[options] [script.js]');
+program.description('babel-watch is a babel-js node app runner that lets you reload the app on JS source file changes');
 program.parse(process.argv);
 
 
