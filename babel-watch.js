@@ -9,6 +9,8 @@ const fs = require('fs');
 const fork = require('child_process').fork;
 const commander = require('commander');
 
+const RESTART_COMMAND = 'rs';
+
 const program = new commander.Command("babel-watch");
 
 function collect(val, memo) {
@@ -29,7 +31,6 @@ program.version(pkg.version);
 program.usage('[options] [script.js]');
 program.description('babel-watch is a babel-js node app runner that lets you reload the app on JS source file changes');
 program.parse(process.argv);
-
 
 
 let only, ignore;
@@ -91,6 +92,17 @@ watcher.on('unlink', file => {
 watcher.on('error', error => {
   console.error('Watcher failure', error);
   process.exit(1);
+});
+
+// Restart the app when a sequence of keys has been pressed ('rs' by refault)
+process.stdin.resume();
+process.stdin.setEncoding('utf8');
+process.stdin.on('data', function(data) {
+  if (String(data).trim().toLowerCase() === RESTART_COMMAND) {
+    if (watcherInitialized) {
+      restartApp();
+    }
+  }
 });
 
 function processAndRestart(file) {
