@@ -2,14 +2,14 @@
 
 'use strict';
 
-let chokidar = require('chokidar');
-let path = require('path');
-let babel = require('babel-core');
-let fs = require('fs');
-let fork = require('child_process').fork;
-let commander = require('commander');
+const chokidar = require('chokidar');
+const path = require('path');
+const babel = require('babel-core');
+const fs = require('fs');
+const fork = require('child_process').fork;
+const commander = require('commander');
 
-let program = new commander.Command("babel-watch");
+const program = new commander.Command("babel-watch");
 
 function collect(val, memo) {
   memo.push(val);
@@ -24,10 +24,12 @@ program.option('-b, --presets [string]', '', babel.util.list);
 program.option('-w, --watch [dir]', 'Watch directory "dir" or files. Use once for each directory or file to watch', collect, []);
 program.option('-x, --exclude [dir]', 'Exclude matching directory/files from watcher. Use once for each directory or file.', collect, []);
 
-let pkg = require('./package.json');
+const pkg = require('./package.json');
 program.version(pkg.version);
 program.usage('[options] [script.js]');
 program.parse(process.argv);
+
+
 
 let only, ignore;
 
@@ -45,19 +47,19 @@ if (program.watch.length === 0) {
   process.exit(1);
 }
 
-let transformOpts = {
+const transformOpts = {
   plugins: program.plugins,
   presets: program.presets,
 };
 
 let childApp;
-let cwd = process.cwd();
+const cwd = process.cwd();
 
-let sources = {};
-let maps = {};
-let errors = {};
+const sources = {};
+const maps = {};
+const errors = {};
 
-let watcher = chokidar.watch(program.watch, {persistent: true, ignored: program.exclude})
+const watcher = chokidar.watch(program.watch, {persistent: true, ignored: program.exclude})
 let watcherInitialized = false;
 
 process.on('SIGINT', function() {
@@ -74,7 +76,7 @@ watcher.on('ready', () => {
 });
 
 watcher.on('unlink', file => {
-  let absoluteFile = path.join(cwd, file);
+  const absoluteFile = path.join(cwd, file);
   if (sources[absoluteFile]) {
     delete sources[absoluteFile];
     delete maps[absoluteFile];
@@ -97,10 +99,10 @@ function processAndRestart(file) {
     childApp.kill('SIGHUP');
     childApp = undefined;
   }
-  let absoluteFile = path.join(cwd, file);
+  const absoluteFile = path.join(cwd, file);
   if (!shouldIgnore(absoluteFile)) {
     try {
-      let compiled = compile(absoluteFile);
+      const compiled = compile(absoluteFile);
       sources[absoluteFile] = compiled.code;
       maps[absoluteFile] = compiled.map;
       delete errors[absoluteFile];
@@ -124,7 +126,7 @@ function restartApp() {
     // There were some transpilation errors, don't start unless solved or invalid file is removed
     return;
   }
-  let app = fork(__dirname + '/runner.js');
+  const app = fork(__dirname + '/runner.js');
 
   app.send({ sources: sources, maps: maps, args: program.args});
   childApp = app;
@@ -141,17 +143,17 @@ function shouldIgnore(filename) {
   }
 }
 
-let cache = {};
+const cache = {};
 
 function compile(filename) {
-  let result;
+  const result;
 
-  let optsManager = new babel.OptionManager;
+  const optsManager = new babel.OptionManager;
 
   // merge in base options and resolve all the plugins and presets relative to this file
   optsManager.mergeOptions(transformOpts, 'base', null, path.dirname(filename));
 
-  let opts = optsManager.init({ filename });
+  const opts = optsManager.init({ filename });
   // Do not process config files since has already been done with the OptionManager
   // calls above and would introduce duplicates.
   opts.babelrc = false;
