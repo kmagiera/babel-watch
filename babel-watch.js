@@ -147,8 +147,6 @@ function shouldIgnore(filename) {
 const cache = {};
 
 function compile(filename) {
-  const result;
-
   const optsManager = new babel.OptionManager;
 
   // merge in base options and resolve all the plugins and presets relative to this file
