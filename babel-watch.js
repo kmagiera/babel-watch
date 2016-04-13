@@ -241,13 +241,13 @@ function restartApp() {
 
   app.on('message', (data) => {
     const filename = data.filename;
+    if (!program.disableAutowatch) {
+      // use relative path for watch.add as it would let it chokidar reconsile excludes
+      const relativeFilename = path.relative(cwd, filename);
+      watcher.add(relativeFilename);
+    }
     handleFileLoad(filename, (source, sourceMap) => {
       requiredFiles[filename] = true;
-      if (!program.disableAutowatch) {
-        // use relative path for watch.add as it would let it chokidar reconsile excludes
-        const relativeFilename = path.relative(cwd, filename);
-        watcher.add(relativeFilename);
-      }
       const sourceBuf = new Buffer(source || 0);
       const mapBuf = new Buffer(sourceMap ? JSON.stringify(sourceMap) : 0);
       const lenBuf = new Buffer(4);
