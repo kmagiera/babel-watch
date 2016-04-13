@@ -6,6 +6,16 @@ Reload your babel-node app on JS source file changes. And do it *fast*.
 
 If you're tired of using [`babel-node`](https://github.com/babel/babel/tree/master/packages/babel-cli) together with [`nodemon`](https://github.com/remy/nodemon) (or similar solution). The reason why the aforementioned setup performs so badly is the startup time of `babel-node` itself. `babel-watch` only starts `babel` in the "master" process where it also starts the file watcher. The transpilation is performed in that process too. On file-watcher events, it spawns a pure `node` process and passes transpiled code from the parent process together with the source maps. This allows us to avoid loading `babel` and all its deps every time we restart the JS script/app.
 
+## Autowatch
+
+A unique feature of `babel-watch` is capability of automatically detecting files that needs to be watched. You no longer need to specify the list of files or directories to watch for. With "autowatch" the only thing you need to do is to pass the name of your main script and `babel-watch` will start watching for the changes on files that are loaded by your node program while it is executing. (You can disable autowatch with `-D` option or exclude some directories from being watched automatically with `-x`).
+
+## System requirements
+
+Currently `babel-watch` is only supported on Linux and OSX.
+
+*(It doesn't work on Windows as it uses unix named pipes, if you want to help with getting that fixed, feel free to contact me)*
+
 ## I want it
 
 Just install it and add to your package:
@@ -34,16 +44,24 @@ Then use `babel-watch` in your `package.json` in scripts section like this:
     -b, --presets [string]
     -w, --watch [dir]              Watch directory "dir" or files. Use once for each directory or file to watch
     -x, --exclude [dir]            Exclude matching directory/files from watcher. Use once for each directory or file.
-    -V, --version                  output the version number
+    -L, --use-polling              In some filesystems watch events may not work correcly. This option enables "polling" which should mitigate this type of issues
+    -D, --disable-autowatch        Don't automatically start watching changes in files "required" by the program
+    -H, --disable-ex-handler       Disable source-map-enhanced uncaught exception handler. (you may want to use this option in case your app registers a custom uncaught exception handler)
 ```
 
 ### Example usage:
 
+In most of the cases you would rely on "autowatch" to monitor all the files that are required by your node application. In that case you just run:
+
 ```bash
-  babel-watch --watch src --watch *.js --exclude src/schema.graphql app.js
+  babel-watch app.js
 ```
 
-Watch for all js files in current directory + all files under `src` directory but ignore file `src/schema.graphql`, whenever one of those files updates restart `app.js` script.
+When you want your app not to restart automatically for some set of files, you can use `--exclude` option:
+
+```bash
+  babel-watch --exclude templates app.js
+```
 
 ## Demo
 
@@ -54,6 +72,24 @@ Demo of `nodemod + babel-node` (on the left) and `babel-watch` reloading simple 
 ## Important information
 
 Using `babel-node` or `babel-watch` is not recommended in production environment. For the production use it is much better practice to build your node application using `babel` and run it using just `node`.
+
+## Troubleshooting
+
+#### Application doesn't restart automatically
+
+There are a couple of reasons that could be causing that:
+
+1. You filesystem configuration doesn't trigger filewatch notification (this could happen for example when you have `babel-watch` running within docker container and have filesystem mirrored). In that case try running `babel-watch` with `-L` option which will enable polling for file changes.
+2. Files you're updating are blacklisted. Check the options you pass to babel-watch and verify that files you're updating are being used by your app and their name does not fall into any exclude pattern (option `-x` or `--exclude`).
+
+#### I'm getting an error: *Cannot find module 'babel-core'*
+
+`babel-watch` does not have `babel-core` listed as a direct dependency but as a "peerDependency". If you're using `babel` in your app you should already have `babel-core` installed. If not you should do `npm install --save-dev babel-core`. We decided not to make `babel-core` a direct dependency as in some cases having it defined this way would make your application pull two versions of `babel-core` from `npm` during installation and since `babel-core` is quite a huge package that's something we wanted to avoid.
+
+#### Still having some issues
+
+Try searching over the issues on GitHub [here](https://github.com/kmagiera/babel-watch/issues). If you don't find anything that would help feel free to open new issue!
+
 
 ## Contributing
 

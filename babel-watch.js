@@ -61,7 +61,7 @@ program.on('--help', () => {
   Examples:
 
     $ babel-watch server.js
-    $ babel-watch -x config server.js
+    $ babel-watch -x templates server.js
     $ babel-watch --presets es2015 server.js --port 8080
 
   See more:
