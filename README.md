@@ -49,6 +49,8 @@ Then use `babel-watch` in your `package.json` in scripts section like this:
     -H, --disable-ex-handler       Disable source-map-enhanced uncaught exception handler. (you may want to use this option in case your app registers a custom uncaught exception handler)
 ```
 
+While the `babel-watch` process is running you may type "rs" and hit return in the terminal to force reload the app.
+
 ### Example usage:
 
 In most of the cases you would rely on "autowatch" to monitor all the files that are required by your node application. In that case you just run:
