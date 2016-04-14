@@ -28,7 +28,7 @@ Just install it and add to your package:
 Then use `babel-watch` in your `package.json` in scripts section like this:
 ```json
   "scripts": {
-    "start": "babel-watch -w src src/main.js"
+    "start": "babel-watch src/main.js"
   }
 ```
 
