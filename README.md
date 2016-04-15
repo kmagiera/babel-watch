@@ -75,6 +75,13 @@ Demo of `nodemod + babel-node` (on the left) and `babel-watch` reloading simple 
 
 Using `babel-node` or `babel-watch` is not recommended in production environment. For the production use it is much better practice to build your node application using `babel` and run it using just `node`.
 
+## Babel compatibility
+
+ * `babel-watch >= 2.0.2` is compatible with `babel-core` version `6.5.1` and above
+ * `babel-watch <= 2.0.1` is compatible with `babel-core` from `6.4.x` up to `6.5.0`
+
+*(This is due to the babel's "option manager" API change in `babel-core@6.5.1`)*
+
 ## Troubleshooting
 
 #### Application doesn't restart automatically
@@ -84,9 +91,11 @@ There are a couple of reasons that could be causing that:
 1. You filesystem configuration doesn't trigger filewatch notification (this could happen for example when you have `babel-watch` running within docker container and have filesystem mirrored). In that case try running `babel-watch` with `-L` option which will enable polling for file changes.
 2. Files you're updating are blacklisted. Check the options you pass to babel-watch and verify that files you're updating are being used by your app and their name does not fall into any exclude pattern (option `-x` or `--exclude`).
 
+
 #### I'm getting an error: *Cannot find module 'babel-core'*
 
 `babel-watch` does not have `babel-core` listed as a direct dependency but as a "peerDependency". If you're using `babel` in your app you should already have `babel-core` installed. If not you should do `npm install --save-dev babel-core`. We decided not to make `babel-core` a direct dependency as in some cases having it defined this way would make your application pull two versions of `babel-core` from `npm` during installation and since `babel-core` is quite a huge package that's something we wanted to avoid.
+
 
 #### Still having some issues
 

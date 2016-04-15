@@ -1,6 +1,6 @@
 {
   "name": "babel-watch",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Reload your babel-node app on JS source file changes. And do it *fast*.",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -31,7 +31,7 @@
     "source-map-support": "^0.4.0"
   },
   "peerDependencies": {
-    "babel-core": "^6.7.x"
+    "babel-core": "6.5.1 - 6.6.0 || ^6.6.x"
   },
   "bin": {
     "babel-watch": "./babel-watch.js"
