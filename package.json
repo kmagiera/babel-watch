@@ -31,7 +31,7 @@
     "source-map-support": "^0.4.0"
   },
   "peerDependencies": {
-    "babel-core": "^6.4.x"
+    "babel-core": "6.4.x"
   },
   "bin": {
     "babel-watch": "./babel-watch.js"
