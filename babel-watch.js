@@ -149,7 +149,7 @@ function handleChange(file) {
   delete cache[absoluteFile];
   delete errors[absoluteFile];
 
-  if (requiredFiles[absoluteFile] || hadErrors) {
+  if (program.disableAutowatch || requiredFiles[absoluteFile] || hadErrors) {
     // file is in use by the app, let's restart!
     restartApp();
   }
