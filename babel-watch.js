@@ -198,7 +198,11 @@ function handleFileLoad(filename, callback) {
 
 function killApp() {
   if (childApp) {
-    childApp.kill('SIGHUP');
+    try {
+      childApp.kill('SIGHUP');
+    } catch (error) {
+      childApp.kill('SIGKILL');
+    }
     childApp = undefined;
   }
   if (pipeFd) {
