@@ -103,8 +103,6 @@ let childApp, pipeFd, pipeFilename;
 const cache = {};
 const errors = {};
 
-let requiredFiles = {};
-
 const watcher = chokidar.watch(program.watch, {
   persistent: true,
   ignored: program.exclude,
@@ -145,14 +143,11 @@ stdin.on('data', (data) => {
 
 function handleChange(file) {
   const absoluteFile = file.startsWith('/') ? file : path.join(cwd, file);
-  const hadErrors = (errors[absoluteFile] !== undefined);
   delete cache[absoluteFile];
   delete errors[absoluteFile];
 
-  if (requiredFiles[absoluteFile] || hadErrors) {
-    // file is in use by the app, let's restart!
-    restartApp();
-  }
+  // file is in use by the app, let's restart!
+  restartApp();
 }
 
 function generateTempFilename() {
@@ -249,7 +244,6 @@ function restartApp() {
     }
   }
 
-  requiredFiles = {}
   const app = fork(path.resolve(__dirname, 'runner.js'));
 
   app.on('message', (data) => {
@@ -260,7 +254,6 @@ function restartApp() {
       watcher.add(relativeFilename);
     }
     handleFileLoad(filename, (source, sourceMap) => {
-      requiredFiles[filename] = true;
       const sourceBuf = new Buffer(source || 0);
       const mapBuf = new Buffer(sourceMap ? JSON.stringify(sourceMap) : 0);
       const lenBuf = new Buffer(4);
