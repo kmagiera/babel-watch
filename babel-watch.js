@@ -233,11 +233,20 @@ function restartApp() {
 
   pipeFilename = generateTempFilename();
 
-  try {
-    execSync(`mkfifo -m 0666 ${pipeFilename}`);
-  } catch (e) {
-    console.error('Unable to create named pipe with mkfifo. Are you on linux/OSX?');
-    process.exit(1);
+  if (os.platform() === 'win32') {
+    try {
+      execSync(`echo. > ${pipeFilename}`);
+    } catch (e) {
+      console.error(`Unable to create file ${pipeFilename}`);
+      process.exit(1);
+    }
+  } else {
+    try {
+      execSync(`mkfifo -m 0666 ${pipeFilename}`);
+    } catch (e) {
+      console.error('Unable to create named pipe with mkfifo. Are you on linux/OSX?');
+      process.exit(1);
+    }
   }
 
   requiredFiles = {}
