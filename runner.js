@@ -10,6 +10,9 @@ let maps = {};
 let pipeFd;
 const BUFFER = new Buffer(10 * 1024);
 
+// Node by default uses '.js' loader to load all the files with unknown extensions
+const DEFAULT_LOADER = require.extensions['.js'];
+
 function readLength(fd) {
   let bytes = 0;
   while (bytes !== 4) {
@@ -50,23 +53,32 @@ function babelWatchLoader(module_, filename, defaultHandler) {
   }
 }
 
-function replaceExtensionHooks() {
+function registerExtension(ext) {
+  const defaultHandler = require.extensions[ext] || DEFAULT_LOADER;
+  require.extensions[ext] = (module_, filename) => {
+    // ignore node_modules by default. don't you dare contacting the parent process!
+    if (filename.split(path.sep).indexOf('node_modules') < 0) {
+      babelWatchLoader(module_, filename, defaultHandler);
+    } else {
+      defaultHandler(module_, filename);
+    }
+  };
+}
+
+function replaceExtensionHooks(extensions) {
   for (const ext in require.extensions) {
-    const defaultHandler = require.extensions[ext]
-    require.extensions[ext] = (module_, filename) => {
-      // ignore node_modules by default. don't you dare contacting the parent process!
-      if (filename.split(path.sep).indexOf('node_modules') < 0) {
-        babelWatchLoader(module_, filename, defaultHandler);
-      } else {
-        defaultHandler(module_, filename);
-      }
-    };
+    registerExtension(ext);
+  }
+  for (let i = 0; i < extensions.length; i++) {
+    const ext = extensions[i];
+    if (!(ext in require.extensions)) {
+      registerExtension(ext);
+    }
   }
 }
 
-replaceExtensionHooks();
-
 process.on('message', (options) => {
+  replaceExtensionHooks(options.transpileExtensions);
   sourceMapSupport.install({
     environment: 'node',
     handleUncaughtExceptions: !!options.handleUncaughtExceptions,

@@ -255,7 +255,7 @@ function restartApp() {
   app.on('message', (data) => {
     const filename = data.filename;
     if (!program.disableAutowatch) {
-      // use relative path for watch.add as it would let it chokidar reconsile excludes
+      // use relative path for watch.add as it would let chokidar reconsile exclude patterns
       const relativeFilename = path.relative(cwd, filename);
       watcher.add(relativeFilename);
     }
@@ -278,6 +278,7 @@ function restartApp() {
     pipe: pipeFilename,
     args: program.args,
     handleUncaughtExceptions: !program.disableExHandler,
+    transpileExtensions: transpileExtensions,
   });
   pipeFd = fs.openSync(pipeFilename, 'w');
   childApp = app;
