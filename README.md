@@ -35,6 +35,7 @@ Then use `babel-watch` in your `package.json` in scripts section like this:
 `babel-watch` was made to be compatible with `babel-node` and `nodemon` options. Not all of them are supported yet, here is a short list of supported command line options:
 
 ```
+    -d, --debug [port]             Start debugger on port
     -o, --only [globs]             Matching files will be transpiled
     -i, --ignore [globs]           Matching files will not be transpiled
     -e, --extensions [extensions]  List of extensions to hook into [.es6,.js,.es,.jsx]
@@ -67,6 +68,12 @@ When you want your app not to restart automatically for some set of files, you c
 
 ```bash
   babel-watch --exclude templates app.js
+```
+
+Start the debugger
+
+```bash
+  babel-watch app.js --debug 5858
 ```
 
 ## Demo
