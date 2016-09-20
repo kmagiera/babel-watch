@@ -12,9 +12,7 @@ A unique feature of `babel-watch` is capability of automatically detecting files
 
 ## System requirements
 
-Currently `babel-watch` is only supported on Linux and OSX.
-
-*(It doesn't work on Windows as it uses unix named pipes, if you want to help with getting that fixed, feel free to contact me)*
+Currently `babel-watch` is supported on Linux, OSX and Windows.
 
 ## I want it
 
@@ -59,6 +57,12 @@ In most of the cases you would rely on "autowatch" to monitor all the files that
   babel-watch app.js
 ```
 
+If you have your view templates (build with [pug](https://github.com/pugjs/pug), [mustache](https://github.com/janl/mustache.js) or any other templating library) in the directory called `views`, autowatch will not be able to detect changes in view template files (see [why](#user-content-application-doesnt-restart-when-i-change-one-of-the-view-templates-html-file-or-similar)) , so you need to pass in that directory name using `--watch` option:
+
+```bash
+  babel-watch --watch views app.js
+```
+
 When you want your app not to restart automatically for some set of files, you can use `--exclude` option:
 
 ```bash
@@ -91,6 +95,10 @@ There are a couple of reasons that could be causing that:
 1. You filesystem configuration doesn't trigger filewatch notification (this could happen for example when you have `babel-watch` running within docker container and have filesystem mirrored). In that case try running `babel-watch` with `-L` option which will enable polling for file changes.
 2. Files you're updating are blacklisted. Check the options you pass to babel-watch and verify that files you're updating are being used by your app and their name does not fall into any exclude pattern (option `-x` or `--exclude`).
 
+
+#### Application doesn't restart when I change one of the view templates (html file or similar):
+
+You perhaps are using autowatch. Apparently since view templates are not loaded using `require` command, autowatch is not able to detect that they are being used. You can still use autowatch for all the js sources, but need to specify the directory name where you keep your view templates so that changes in these files will trigger restart. This can be done using `--watch` option (e.g. `babel-watch --watch views app.js`).
 
 #### I'm getting an error: *Cannot find module 'babel-core'*
 
