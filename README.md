@@ -98,7 +98,7 @@ There are a couple of reasons that could be causing that:
 
 #### Application doesn't restart when I change one of the view templates (html file or similar):
 
-You perhaps are using autowatch. Apparently since view templates are not loaded using `require` command, autowatch is not able to detect that they are being used. You can still use autowatch for all the js sources, but need to specify the directory name where you keep your view templates so that changes in these files will trigger restart. This can be done using `--watch` option (e.g. `babel-watch --watch views app.js`).
+You perhaps are using autowatch. Apparently since view templates are not loaded using `require` command but with `fs.read` instead, therefore autowatch is not able to detect that they are being used. You can still use autowatch for all the js sources, but need to specify the directory name where you keep your view templates so that changes in these files can trigger app restart. This can be done using `--watch` option (e.g. `babel-watch --watch views app.js`).
 
 #### I'm getting an error: *Cannot find module 'babel-core'*
 
