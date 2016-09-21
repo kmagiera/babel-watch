@@ -21,7 +21,7 @@ function collect(val, memo) {
   return memo;
 }
 
-program.option('d, --debug [port]', 'Set debugger port')
+program.option('-d, --debug [port]', 'Set debugger port')
 program.option('-o, --only [globs]', 'Matching files will be transpiled');
 program.option('-i, --ignore [globs]', 'Matching files will not be transpiled');
 program.option('-e, --extensions [extensions]', 'List of extensions to hook into [.es6,.js,.es,.jsx]');
