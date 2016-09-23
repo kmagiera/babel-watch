@@ -104,6 +104,9 @@ You perhaps are using autowatch. Apparently since view templates are not loaded 
 
 `babel-watch` does not have `babel-core` listed as a direct dependency but as a "peerDependency". If you're using `babel` in your app you should already have `babel-core` installed. If not you should do `npm install --save-dev babel-core`. We decided not to make `babel-core` a direct dependency as in some cases having it defined this way would make your application pull two versions of `babel-core` from `npm` during installation and since `babel-core` is quite a huge package that's something we wanted to avoid.
 
+#### Every time I run a script, I get a load of temporary files clogging up my project root
+
+`babel-watch` creates a temporary file each time it runs in order to watch for changes. When running as an npm script, this can end up putting these files into your project root. This is due to an [issue in npm](https://github.com/npm/npm/issues/4531) which changes the value of `TMPDIR` to the current directory. To fix this, change your npm script from `babel-watch ./src/app.js` to `TMPDIR=/tmp babel-watch ./src/app.js`.
 
 #### Still having some issues
 
