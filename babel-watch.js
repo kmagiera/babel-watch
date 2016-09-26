@@ -245,12 +245,13 @@ function restartApp() {
     }
   }
 
-  // If debugger mode is present 
-  if(program.debug) {
-      //Set an unused port number for child process.
-      process.execArgv.push('--debug=' + (program.debug));
+  // Support for --debug option
+  const runnerExecArgv = process.execArgv.slice();
+  if (program.debug) {
+    runnerExecArgv.push('--debug=' + program.debug);
   }
-  const app = fork(path.resolve(__dirname, 'runner.js'));
+
+  const app = fork(path.resolve(__dirname, 'runner.js'), { execArgv: runnerExecArgv });
 
   app.on('message', (data) => {
     const filename = data.filename;
