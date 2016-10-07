@@ -115,6 +115,11 @@ You perhaps are using autowatch. Apparently since view templates are not loaded 
 
 `babel-watch` creates a temporary file each time it runs in order to watch for changes. When running as an npm script, this can end up putting these files into your project root. This is due to an [issue in npm](https://github.com/npm/npm/issues/4531) which changes the value of `TMPDIR` to the current directory. To fix this, change your npm script from `babel-watch ./src/app.js` to `TMPDIR=/tmp babel-watch ./src/app.js`.
 
+#### I'm getting `regeneratorRuntime is not defined` error when running with babel-watch but babel-node runs just fine
+
+The reason why you're getting the error is because the babel regenerator plugin (that gives you support for async functions) requires a runtime library to be included with your application. You will get the same error when you build your app with `babel` first and then run with `node`. It works fine with `babel-node` because it includes `babel-polyfill` module automatically whenever it runs your app, even if you don't use features like async functions (that's one of the reason why its startup time is so long). Please see [this answer on stackoverflow](http://stackoverflow.com/a/36821986/1665044) to learn how to fix this issue
+
+
 #### Still having some issues
 
 Try searching over the issues on GitHub [here](https://github.com/kmagiera/babel-watch/issues). If you don't find anything that would help feel free to open new issue!
