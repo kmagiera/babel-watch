@@ -78,7 +78,7 @@ Start the debugger
 
 ## Demo
 
-Demo of `nodemod + babel-node` (on the left) and `babel-watch` reloading simple `express` based app:
+Demo of `nodemon + babel-node` (on the left) and `babel-watch` reloading simple `express` based app:
 
 ![](https://raw.githubusercontent.com/kmagiera/babel-watch/master/docs/demo.gif)
 
