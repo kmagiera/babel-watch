@@ -22,7 +22,7 @@ function collect(val, memo) {
 }
 
 program.option('-d, --debug [port]', 'Set debugger port')
-program.option('-D, --debug-brk', 'Enable debug break mode')
+program.option('-B, --debug-brk', 'Enable debug break mode')
 program.option('-I, --inspect', 'Enable inspect mode')
 program.option('-o, --only [globs]', 'Matching files will be transpiled');
 program.option('-i, --ignore [globs]', 'Matching files will not be transpiled');
