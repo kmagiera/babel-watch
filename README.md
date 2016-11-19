@@ -36,6 +36,8 @@ Then use `babel-watch` in your `package.json` in scripts section like this:
 
 ```
     -d, --debug [port]             Start debugger on port
+    -D, --debug-brk                Enable debug break mode
+    -I, --inspect                  Enable inspect mode
     -o, --only [globs]             Matching files will be transpiled
     -i, --ignore [globs]           Matching files will not be transpiled
     -e, --extensions [extensions]  List of extensions to hook into [.es6,.js,.es,.jsx]
