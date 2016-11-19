@@ -78,7 +78,7 @@ Start the debugger
 
 ## Demo
 
-Demo of `nodemod + babel-node` (on the left) and `babel-watch` reloading simple `express` based app:
+Demo of `nodemon + babel-node` (on the left) and `babel-watch` reloading simple `express` based app:
 
 ![](https://raw.githubusercontent.com/kmagiera/babel-watch/master/docs/demo.gif)
 
@@ -110,6 +110,14 @@ You perhaps are using autowatch. Apparently since view templates are not loaded 
 #### I'm getting an error: *Cannot find module 'babel-core'*
 
 `babel-watch` does not have `babel-core` listed as a direct dependency but as a "peerDependency". If you're using `babel` in your app you should already have `babel-core` installed. If not you should do `npm install --save-dev babel-core`. We decided not to make `babel-core` a direct dependency as in some cases having it defined this way would make your application pull two versions of `babel-core` from `npm` during installation and since `babel-core` is quite a huge package that's something we wanted to avoid.
+
+#### Every time I run a script, I get a load of temporary files clogging up my project root
+
+`babel-watch` creates a temporary file each time it runs in order to watch for changes. When running as an npm script, this can end up putting these files into your project root. This is due to an [issue in npm](https://github.com/npm/npm/issues/4531) which changes the value of `TMPDIR` to the current directory. To fix this, change your npm script from `babel-watch ./src/app.js` to `TMPDIR=/tmp babel-watch ./src/app.js`.
+
+#### I'm getting `regeneratorRuntime is not defined` error when running with babel-watch but babel-node runs just fine
+
+The reason why you're getting the error is because the babel regenerator plugin (that gives you support for async functions) requires a runtime library to be included with your application. You will get the same error when you build your app with `babel` first and then run with `node`. It works fine with `babel-node` because it includes `babel-polyfill` module automatically whenever it runs your app, even if you don't use features like async functions (that's one of the reason why its startup time is so long). Please see [this answer on stackoverflow](http://stackoverflow.com/a/36821986/1665044) to learn how to fix this issue
 
 
 #### Still having some issues
