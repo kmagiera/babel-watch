@@ -35,20 +35,20 @@ Then use `babel-watch` in your `package.json` in scripts section like this:
 `babel-watch` was made to be compatible with `babel-node` and `nodemon` options. Not all of them are supported yet, here is a short list of supported command line options:
 
 ```
-    -d, --debug [port]             Start debugger on port
-    -B, --debug-brk                Enable debug break mode
-    -I, --inspect                  Enable inspect mode
     -o, --only [globs]             Matching files will be transpiled
     -i, --ignore [globs]           Matching files will not be transpiled
     -e, --extensions [extensions]  List of extensions to hook into [.es6,.js,.es,.jsx]
     -p, --plugins [string]
     -b, --presets [string]
     -w, --watch [dir]              Watch directory "dir" or files. Use once for each directory or file to watch
+        --delay <n>                The amount of time in milliseconds to wait before emitting an "update" event after a change. default: 1000
     -x, --exclude [dir]            Exclude matching directory/files from watcher. Use once for each directory or file.
     -L, --use-polling              In some filesystems watch events may not work correcly. This option enables "polling" which should mitigate this type of issues
     -D, --disable-autowatch        Don't automatically start watching changes in files "required" by the program
     -H, --disable-ex-handler       Disable source-map-enhanced uncaught exception handler. (you may want to use this option in case your app registers a custom uncaught exception handler)
 ```
+
+Unknown options will be passed to node process.
 
 While the `babel-watch` process is running you may type "rs" and hit return in the terminal to force reload the app.
 

@@ -21,15 +21,13 @@ function collect(val, memo) {
   return memo;
 }
 
-program.option('-d, --debug [port]', 'Set debugger port')
-program.option('-B, --debug-brk', 'Enable debug break mode')
-program.option('-I, --inspect', 'Enable inspect mode')
 program.option('-o, --only [globs]', 'Matching files will be transpiled');
 program.option('-i, --ignore [globs]', 'Matching files will not be transpiled');
 program.option('-e, --extensions [extensions]', 'List of extensions to hook into [.es6,.js,.es,.jsx]');
 program.option('-p, --plugins [string]', '', babel.util.list);
 program.option('-b, --presets [string]', '', babel.util.list);
 program.option('-w, --watch [dir]', 'Watch directory "dir" or files. Use once for each directory or file to watch', collect, []);
+program.option('--delay <n>', 'The amount of time in milliseconds to wait before emitting an "update" event after a change. default: 1000', parseInt);
 program.option('-x, --exclude [dir]', 'Exclude matching directory/files from watcher. Use once for each directory or file.', collect, []);
 program.option('-L, --use-polling', 'In some filesystems watch events may not work correcly. This option enables "polling" which should mitigate this type of issues');
 program.option('-D, --disable-autowatch', 'Don\'t automatically start watching changes in files "required" by the program');
@@ -72,6 +70,7 @@ program.on('--help', () => {
   https://github.com/kmagiera/babel-watch
   `);
 });
+program.allowUnknownOption(true);
 program.parse(process.argv);
 
 const cwd = process.cwd();
@@ -140,7 +139,7 @@ const stdin = process.stdin;
 stdin.setEncoding('utf8');
 stdin.on('data', (data) => {
   if (String(data).trim() === RESTART_COMMAND) {
-    restartApp();
+    restartAppImmediate();
   }
 });
 
@@ -231,7 +230,7 @@ function prepareRestart() {
   }
 }
 
-function restartApp() {
+function restartAppImmediate() {
   if (!watcherInitialized) return;
   prepareRestart();
 }
@@ -260,18 +259,21 @@ function restartAppInternal() {
     }
   }
 
-  // Support for --debug option
   const runnerExecArgv = process.execArgv.slice();
-  if (program.debug) {
-    runnerExecArgv.push('--debug=' + program.debug);
-  }
-  // Support for --inspect option
-  if (program.inspect) {
-    runnerExecArgv.push('--inspect');
-  }
-  // Support for --debug-brk
-  if(program.debugBrk) {
-    runnerExecArgv.push('--debug-brk');
+  const unknownOptions = program.parseOptions(program.normalize(process.argv.slice(2))).unknown;
+
+  if (unknownOptions.length > 0) {
+    for (let i = 0, len = unknownOptions.length; i < len; ++i) {
+      // If this unknown option is a '--' option and the next option looks like it might
+      // be an argument for this option, we format it as --option=argument and pass it on.
+      if (unknownOptions[i].indexOf('--') === 0 &&
+          unknownOptions[i + 1] &&
+          unknownOptions[i + 1].indexOf('-') !== 0) {
+        runnerExecArgv.push(unknownOptions[i] + '=' + unknownOptions[++i]);
+      } else {
+        runnerExecArgv.push(unknownOptions[i]);
+      }
+    }
   }
 
   const app = fork(path.resolve(__dirname, 'runner.js'), { execArgv: runnerExecArgv });
@@ -312,6 +314,18 @@ function restartAppInternal() {
   });
   pipeFd = fs.openSync(pipeFilename, 'w');
   childApp = app;
+}
+
+const delay = program.delay || 1000;
+let timeout;
+function restartApp() {
+  if (timeout) {
+    clearTimeout(timeout);
+  }
+  timeout = setTimeout(function() {
+    timeout = null;
+    restartAppImmediate();
+  }, delay);
 }
 
 function shouldIgnore(filename) {
