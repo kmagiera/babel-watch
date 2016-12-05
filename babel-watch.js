@@ -22,6 +22,8 @@ function collect(val, memo) {
 }
 
 program.option('-d, --debug [port]', 'Set debugger port')
+program.option('-B, --debug-brk', 'Enable debug break mode')
+program.option('-I, --inspect', 'Enable inspect mode')
 program.option('-o, --only [globs]', 'Matching files will be transpiled');
 program.option('-i, --ignore [globs]', 'Matching files will not be transpiled');
 program.option('-e, --extensions [extensions]', 'List of extensions to hook into [.es6,.js,.es,.jsx]');
@@ -249,6 +251,14 @@ function restartApp() {
   const runnerExecArgv = process.execArgv.slice();
   if (program.debug) {
     runnerExecArgv.push('--debug=' + program.debug);
+  }
+  // Support for --inspect option
+  if (program.inspect) {
+    runnerExecArgv.push('--inspect');
+  }
+  // Support for --debug-brk
+  if(program.debugBrk) {
+    runnerExecArgv.push('--debug-brk');
   }
 
   const app = fork(path.resolve(__dirname, 'runner.js'), { execArgv: runnerExecArgv });
