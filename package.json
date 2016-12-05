@@ -1,6 +1,6 @@
 {
   "name": "babel-watch",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Reload your babel-node app on JS source file changes. And do it *fast*.",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
