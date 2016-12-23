@@ -47,7 +47,18 @@ function babelWatchLoader(module_, filename, defaultHandler) {
   const map = readFileFromPipeSync(pipeFd);
   if (source) {
     maps[filename] = map && JSON.parse(map);
-    module_._compile(source, filename);
+    try {
+      module_._compile(source, filename);
+    } catch (error) {
+      if (error.code === 'MODULE_NOT_FOUND') {
+        console.error(error);
+        process.send({
+          restart: true,
+        });
+      } else {
+        throw error;
+      }
+    }
   } else {
     defaultHandler(module_, filename);
   }
