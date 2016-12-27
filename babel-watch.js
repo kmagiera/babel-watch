@@ -274,13 +274,20 @@ function restartApp() {
       const sourceBuf = new Buffer(source || 0);
       const mapBuf = new Buffer(sourceMap ? JSON.stringify(sourceMap) : 0);
       const lenBuf = new Buffer(4);
-      lenBuf.writeUInt32BE(sourceBuf.length, 0);
-      fs.writeSync(pipeFd, lenBuf, 0, 4);
-      sourceBuf.length && fs.writeSync(pipeFd, sourceBuf, 0, sourceBuf.length);
+      try {
+        lenBuf.writeUInt32BE(sourceBuf.length, 0);
+        fs.writeSync(pipeFd, lenBuf, 0, 4);
+        sourceBuf.length && fs.writeSync(pipeFd, sourceBuf, 0, sourceBuf.length);
 
-      lenBuf.writeUInt32BE(mapBuf.length, 0);
-      fs.writeSync(pipeFd, lenBuf, 0, 4);
-      mapBuf.length && fs.writeSync(pipeFd, mapBuf, 0, mapBuf.length);
+        lenBuf.writeUInt32BE(mapBuf.length, 0);
+        fs.writeSync(pipeFd, lenBuf, 0, 4);
+        mapBuf.length && fs.writeSync(pipeFd, mapBuf, 0, mapBuf.length);
+      } catch (error) {
+        // EPIPE means `pipeFd` has been closed. We can ignore this
+        if (error.code !== 'EPIPE') {
+          throw error;
+        }
+      }
     });
   });
 
