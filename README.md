@@ -41,7 +41,7 @@ Then use `babel-watch` in your `package.json` in scripts section like this:
     -p, --plugins [string]
     -b, --presets [string]
     -w, --watch [dir]              Watch directory "dir" or files. Use once for each directory or file to watch
-        --delay <n>                The amount of time in milliseconds to wait before emitting an "update" event after a change. default: 1000
+        --delay <n>                The amount of time in milliseconds to wait before emitting an "update" event after a change. default: 100
     -x, --exclude [dir]            Exclude matching directory/files from watcher. Use once for each directory or file.
     -L, --use-polling              In some filesystems watch events may not work correcly. This option enables "polling" which should mitigate this type of issues
     -D, --disable-autowatch        Don't automatically start watching changes in files "required" by the program
