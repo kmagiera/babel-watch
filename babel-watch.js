@@ -145,14 +145,11 @@ stdin.on('data', (data) => {
 
 function handleChange(file) {
   const absoluteFile = file.startsWith('/') ? file : path.join(cwd, file);
-  const hadErrors = (errors[absoluteFile] !== undefined);
   delete cache[absoluteFile];
   delete errors[absoluteFile];
 
-  if (program.disableAutowatch || requiredFiles[absoluteFile] || hadErrors) {
-    // file is in use by the app, let's restart!
-    restartApp();
-  }
+  // file is in use by the app, let's restart!
+  restartApp();
 }
 
 function generateTempFilename() {
