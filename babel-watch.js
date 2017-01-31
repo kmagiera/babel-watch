@@ -196,20 +196,25 @@ function handleFileLoad(filename, callback) {
 
 function killApp() {
   if (childApp) {
+    const currentPipeFd = pipeFd;
+    const currentPipeFilename = pipeFilename;
+    childApp.on('exit', () => {
+      if (currentPipeFd) {
+        fs.close(currentPipeFd); // silently close pipe fd - ignore callback
+      }
+      if (currentPipeFilename) {
+        fs.unlink(currentPipeFilename); // silently remove old pipe file - ignore callback
+      }
+      restartAppInternal();
+    });
     try {
       childApp.kill('SIGHUP');
     } catch (error) {
       childApp.kill('SIGKILL');
     }
-    childApp = undefined;
-  }
-  if (pipeFd) {
-    fs.close(pipeFd); // silently close pipe fd - ignore callback
     pipeFd = undefined;
-  }
-  if (pipeFilename) {
-    fs.unlink(pipeFilename); // silently remove old pipe file - ignore callback
     pipeFilename = undefined;
+    childApp = undefined;
   }
 }
 
@@ -218,12 +223,17 @@ function prepareRestart() {
     // kill app early as `compile` may take a while
     console.log(">>> RESTARTING <<<");
     killApp();
+  } else {
+    restartAppInternal();
   }
 }
 
 function restartApp() {
   if (!watcherInitialized) return;
   prepareRestart();
+}
+
+function restartAppInternal() {
   if (Object.keys(errors).length != 0) {
     // There were some transpilation errors, don't start unless solved or invalid file is removed
     return;
