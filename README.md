@@ -21,7 +21,7 @@ Just install it and add to your package:
   npm install --save-dev babel-watch
 ```
 
-(Make sure you have `babel` installed as dependency in your project as `babel-watch` only defines `babel` as a "peerDependency")
+(Make sure you have `babel-core` installed as dependency in your project as `babel-watch` only defines `babel-core` as a "peerDependency")
 
 Then use `babel-watch` in your `package.json` in scripts section like this:
 ```json
