@@ -203,7 +203,7 @@ function killApp() {
         fs.close(currentPipeFd); // silently close pipe fd - ignore callback
       }
       if (currentPipeFilename) {
-        fs.unlink(currentPipeFilename); // silently remove old pipe file - ignore callback
+        fs.unlink(currentPipeFilename, ()=>{}); // silently remove old pipe file - ignore callback
       }
       restartAppInternal();
     });
