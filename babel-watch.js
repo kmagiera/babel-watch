@@ -34,6 +34,7 @@ program.option('-x, --exclude [dir]', 'Exclude matching directory/files from wat
 program.option('-L, --use-polling', 'In some filesystems watch events may not work correcly. This option enables "polling" which should mitigate this type of issues');
 program.option('-D, --disable-autowatch', 'Don\'t automatically start watching changes in files "required" by the program');
 program.option('-H, --disable-ex-handler', 'Disable source-map-enhanced uncaught exception handler. (you may want to use this option in case your app registers a custom uncaught exception handler)');
+program.option('-m, --message [string]', 'Set custom message displayed on restart (default is ">>> RESTARTING <<<")');
 
 const pkg = require('./package.json');
 program.version(pkg.version);
@@ -221,7 +222,8 @@ function killApp() {
 function prepareRestart() {
   if (watcherInitialized && childApp) {
     // kill app early as `compile` may take a while
-    console.log(">>> RESTARTING <<<");
+    var restartMessage = program.message ? program.message : ">>> RESTARTING <<<";
+    console.log(restartMessage);
     killApp();
   } else {
     restartAppInternal();
