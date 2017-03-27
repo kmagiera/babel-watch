@@ -200,10 +200,10 @@ function killApp() {
     const currentPipeFilename = pipeFilename;
     childApp.on('exit', () => {
       if (currentPipeFd) {
-        fs.close(currentPipeFd); // silently close pipe fd - ignore callback
+        fs.closeSync(currentPipeFd);
       }
       if (currentPipeFilename) {
-        fs.unlink(currentPipeFilename); // silently remove old pipe file - ignore callback
+        fs.unlinkSync(currentPipeFilename);
       }
       restartAppInternal();
     });
