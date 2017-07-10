@@ -17,8 +17,15 @@ Currently `babel-watch` is supported on Linux, OSX and Windows.
 ## I want it
 
 Just install it and add to your package:
+
+With NPM:
 ```bash
   npm install --save-dev babel-watch
+```
+
+With Yarn:
+```bash
+  yarn add --dev babel-watch
 ```
 
 (Make sure you have `babel-core` installed as dependency in your project as `babel-watch` only defines `babel-core` as a "peerDependency")
@@ -48,6 +55,7 @@ Then use `babel-watch` in your `package.json` in scripts section like this:
     -L, --use-polling              In some filesystems watch events may not work correcly. This option enables "polling" which should mitigate this type of issues
     -D, --disable-autowatch        Don't automatically start watching changes in files "required" by the program
     -H, --disable-ex-handler       Disable source-map-enhanced uncaught exception handler. (you may want to use this option in case your app registers a custom uncaught exception handler)
+    -m, --message [string]         Set custom message displayed on restart (default is ">>> RESTARTING <<<")
 ```
 
 While the `babel-watch` process is running you may type "rs" and hit return in the terminal to force reload the app.
