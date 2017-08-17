@@ -23,7 +23,7 @@ function collect(val, memo) {
 
 program.option('-d, --debug [port]', 'Set debugger port')
 program.option('-B, --debug-brk', 'Enable debug break mode')
-program.option('-I, --inspect', 'Enable inspect mode')
+program.option('-I, --inspect [port]', 'Enable inspect mode')
 program.option('-o, --only [globs]', 'Matching files will be transpiled');
 program.option('-i, --ignore [globs]', 'Matching files will not be transpiled');
 program.option('-e, --extensions [extensions]', 'List of extensions to hook into [.es6,.js,.es,.jsx]');
@@ -266,7 +266,8 @@ function restartAppInternal() {
   }
   // Support for --inspect option
   if (program.inspect) {
-    runnerExecArgv.push('--inspect');
+    const inspectArg = typeof program.inspect === 'string' ? '=' + program.inspect : '';
+    runnerExecArgv.push('--inspect' + inspectArg);
   }
   // Support for --debug-brk
   if(program.debugBrk) {
