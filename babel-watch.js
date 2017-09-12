@@ -197,15 +197,16 @@ function handleFileLoad(filename, callback) {
 
 function killApp() {
   if (childApp) {
-    const currentPipeFd = pipeFd;
-    const currentPipeFilename = pipeFilename;
     childApp.on('exit', () => {
-      if (currentPipeFd) {
-        fs.closeSync(currentPipeFd); // silently close pipe fd
+      if (pipeFd) {
+        fs.closeSync(pipeFd); // silently close pipe fd
       }
-      if (currentPipeFilename) {
-        fs.unlinkSync(currentPipeFilename); // silently remove old pipe file
+      if (pipeFilename) {
+        fs.unlinkSync(pipeFilename); // silently remove old pipe file
       }
+      pipeFd = undefined;
+      childApp = undefined;
+      pipeFilename = undefined;
       restartAppInternal();
     });
     try {
@@ -213,9 +214,6 @@ function killApp() {
     } catch (error) {
       childApp.kill('SIGKILL');
     }
-    pipeFd = undefined;
-    pipeFilename = undefined;
-    childApp = undefined;
   }
 }
 
