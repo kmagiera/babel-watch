@@ -199,7 +199,11 @@ function killApp() {
   if (childApp) {
     const currentPipeFd = pipeFd;
     const currentPipeFilename = pipeFilename;
-    childApp.on('exit', () => {
+
+    let hasRestarted = false;
+    const restartOnce = () => {
+      if (hasRestarted) return;
+      hasRestarted = true;
       if (currentPipeFd) {
         fs.closeSync(currentPipeFd); // silently close pipe fd
       }
@@ -207,15 +211,29 @@ function killApp() {
         fs.unlinkSync(currentPipeFilename); // silently remove old pipe file
       }
       restartAppInternal();
-    });
+    };
+    childApp.on('exit', restartOnce);
+    let isRunning = true;
     try {
-      childApp.kill('SIGHUP');
-    } catch (error) {
-      childApp.kill('SIGKILL');
+      process.kill(childApp.pid, 0);
+    } catch (e) {
+      isRunning = false;
     }
-    pipeFd = undefined;
-    pipeFilename = undefined;
-    childApp = undefined;
+    if (isRunning) {
+      try {
+        childApp.kill('SIGHUP');
+      } catch (error) {
+        childApp.kill('SIGKILL');
+      }
+      pipeFd = undefined;
+      pipeFilename = undefined;
+      childApp = undefined;
+    } else {
+      pipeFd = undefined;
+      pipeFilename = undefined;
+      childApp = undefined;
+      restartOnce();
+    }
   }
 }
 
