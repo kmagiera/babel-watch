@@ -11,6 +11,7 @@ const util = require('util');
 const fork = require('child_process').fork;
 const execSync = require('child_process').execSync;
 const commander = require('commander');
+const notifier = require('node-notifier');
 
 const RESTART_COMMAND = 'rs';
 
@@ -311,6 +312,15 @@ function restartAppInternal() {
   });
   pipeFd = fs.openSync(pipeFilename, 'w');
   childApp = app;
+
+  showNotification();
+}
+
+function showNotification() {
+  notifier.notify({
+    title: 'babel-watch',
+    message: 'App restarted',
+  });
 }
 
 function shouldIgnore(filename) {
