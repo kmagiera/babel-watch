@@ -41,6 +41,7 @@ function babelWatchLoader(module_, filename, defaultHandler) {
   // require writing native code which usually brings large
   // dependencies to the project and I prefer to avoid that
   process.send({
+    event: 'babel-watch-filename',
     filename: filename,
   });
   const source = readFileFromPipeSync(pipeFd);
@@ -85,6 +86,7 @@ function replaceExtensionHooks(extensions) {
 }
 
 process.on('message', (options) => {
+  if (!options || options.event !== 'babel-watch-start') return;
   replaceExtensionHooks(options.transpileExtensions);
   sourceMapSupport.install({
     environment: 'node',
