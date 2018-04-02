@@ -4,7 +4,7 @@
 
 const chokidar = require('chokidar');
 const path = require('path');
-const babel = require('babel-core');
+const babel = require('@babel/core');
 const fs = require('fs');
 const os = require('os');
 const util = require('util');
