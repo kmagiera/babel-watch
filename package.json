@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/kmagiera/babel-watch#readme",
   "dependencies": {
+    "@babel/core": "^7.0.0-beta.44",
     "chokidar": "^1.4.3",
     "commander": "^2.9.0",
     "source-map-support": "^0.4.0"

@@ -21,14 +21,16 @@ function collect(val, memo) {
   return memo;
 }
 
+console.log(Object.keys(babel))
+
 program.option('-d, --debug [port]', 'Set debugger port')
 program.option('-B, --debug-brk', 'Enable debug break mode')
 program.option('-I, --inspect', 'Enable inspect mode')
 program.option('-o, --only [globs]', 'Matching files will be transpiled');
 program.option('-i, --ignore [globs]', 'Matching files will not be transpiled');
 program.option('-e, --extensions [extensions]', 'List of extensions to hook into [.es6,.js,.es,.jsx]');
-program.option('-p, --plugins [string]', '', babel.util.list);
-program.option('-b, --presets [string]', '', babel.util.list);
+//program.option('-b, --presets [string]', '', babel.util.list);
+//program.option('-p, --plugins [string]', '', babel.util.list);
 program.option('-w, --watch [dir]', 'Watch directory "dir" or files. Use once for each directory or file to watch', collect, []);
 program.option('-x, --exclude [dir]', 'Exclude matching directory/files from watcher. Use once for each directory or file.', collect, []);
 program.option('-L, --use-polling', 'In some filesystems watch events may not work correcly. This option enables "polling" which should mitigate this type of issues');
@@ -79,13 +81,15 @@ const cwd = process.cwd();
 
 let only, ignore;
 
-if (program.only != null) only = babel.util.arrayify(program.only, babel.util.regexify);
-if (program.ignore != null) ignore = babel.util.arrayify(program.ignore, babel.util.regexify);
+console.log(babel.DEFAULT_EXTENSIONS)
 
-let transpileExtensions = babel.util.canCompile.EXTENSIONS;
+// if (program.only != null) only = babel.util.arrayify(program.only, babel.util.regexify);
+// if (program.ignore != null) ignore = babel.util.arrayify(program.ignore, babel.util.regexify);
+
+let transpileExtensions = babel.DEFAULT_EXTENSIONS;
 
 if (program.extensions) {
-  transpileExtensions = transpileExtensions.concat(babel.util.arrayify(program.extensions));
+  // transpileExtensions = transpileExtensions.concat(babel.util.arrayify(program.extensions));
 }
 
 const mainModule = program.args[0];
