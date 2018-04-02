@@ -21,7 +21,6 @@ function collect(val, memo) {
   return memo;
 }
 
-console.log(Object.keys(babel))
 
 program.option('-d, --debug [port]', 'Set debugger port')
 program.option('-B, --debug-brk', 'Enable debug break mode')
@@ -81,7 +80,6 @@ const cwd = process.cwd();
 
 let only, ignore;
 
-console.log(babel.DEFAULT_EXTENSIONS)
 
 // if (program.only != null) only = babel.util.arrayify(program.only, babel.util.regexify);
 // if (program.ignore != null) ignore = babel.util.arrayify(program.ignore, babel.util.regexify);
@@ -328,15 +326,16 @@ function shouldIgnore(filename) {
   }
 }
 
+
 function compile(filename, callback) {
   const optsManager = new babel.OptionManager;
 
   // merge in base options and resolve all the plugins and presets relative to this file
-  optsManager.mergeOptions({
-    options: transformOpts,
-    alias: 'base',
-    loc: path.dirname(filename)
-  });
+  // optsManager.mergeOptions({
+  //   options: transformOpts,
+  //   alias: 'base',
+  //   loc: path.dirname(filename)
+  // });
 
   const opts = optsManager.init({ filename });
   // Do not process config files since has already been done with the OptionManager
