@@ -21,6 +21,23 @@ function collect(val, memo) {
   return memo;
 }
 
+// Plucked directly from old Babel Core
+// https://github.com/babel/babel/commit/0df0c696a93889f029982bf36d34346a039b1920
+function regexify(val) {
+  if (!val) return new RegExp;
+  if (_.isArray(val)) val = val.join("|");
+  if (_.isString(val)) return new RegExp(val || "");
+  if (_.isRegExp(val)) return val;
+  throw new TypeError("illegal type for regexify");
+};
+ 
+function arrayify(val) {
+  if (!val) return [];
+  if (_.isString(val)) return exports.list(val);
+  if (_.isArray(val)) return val;
+  throw new TypeError("illegal type for arrayify");
+};
+
 
 program.option('-d, --debug [port]', 'Set debugger port')
 program.option('-B, --debug-brk', 'Enable debug break mode')
@@ -81,13 +98,13 @@ const cwd = process.cwd();
 let only, ignore;
 
 
-// if (program.only != null) only = babel.util.arrayify(program.only, babel.util.regexify);
-// if (program.ignore != null) ignore = babel.util.arrayify(program.ignore, babel.util.regexify);
+if (program.only != null) only = arrayify(program.only, regexify);
+if (program.ignore != null) ignore = arrayify(program.ignore, regexify);
 
 let transpileExtensions = babel.DEFAULT_EXTENSIONS;
 
 if (program.extensions) {
-  // transpileExtensions = transpileExtensions.concat(babel.util.arrayify(program.extensions));
+  transpileExtensions = transpileExtensions.concat(arrayify(program.extensions));
 }
 
 const mainModule = program.args[0];
