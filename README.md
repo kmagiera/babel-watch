@@ -1,3 +1,7 @@
+# Looking for maintainer
+
+As I've stopped using this project some time ago I'd be happy to onboard new person who would be responsible for evaluating, merging PRs and publishing new releases. If you would like to be such a person and help this community get what they deserve join our discussion here: https://github.com/kmagiera/babel-watch/issues/71
+
 # babel-watch
 
 Reload your babel-node app on JS source file changes. And do it *fast*.
