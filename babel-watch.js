@@ -117,7 +117,7 @@ let watcherInitialized = (program.watch.length === 0);
 
 process.on('SIGINT', function() {
   watcher.close();
-  process.exit(1);
+  process.exit(0);
 });
 
 watcher.on('change', handleChange);
