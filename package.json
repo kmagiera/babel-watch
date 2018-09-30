@@ -1,6 +1,6 @@
 {
   "name": "babel-watch",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "description": "Reload your babel-node app on JS source file changes. And do it *fast*.",
   "main": "babel-watch.js",
   "scripts": {
@@ -27,6 +27,8 @@
   },
   "homepage": "https://github.com/kmagiera/babel-watch#readme",
   "dependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
     "chokidar": "^1.4.3",
     "commander": "^2.9.0",
     "source-map-support": "^0.4.0"
