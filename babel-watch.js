@@ -11,8 +11,10 @@ const util = require('util');
 const fork = require('child_process').fork;
 const execSync = require('child_process').execSync;
 const commander = require('commander');
+const debounce = require('lodash.debounce');
 
 const RESTART_COMMAND = 'rs';
+const DEBOUNCE_DURATION = 100; //milliseconds
 
 const program = new commander.Command("babel-watch");
 
@@ -121,9 +123,11 @@ process.on('SIGINT', function() {
   process.exit(0);
 });
 
-watcher.on('change', handleChange);
-watcher.on('add', handleChange);
-watcher.on('unlink', handleChange);
+const debouncedHandleChange = debounce(handleChange, DEBOUNCE_DURATION);
+
+watcher.on('change', debouncedHandleChange);
+watcher.on('add', debouncedHandleChange);
+watcher.on('unlink', debouncedHandleChange);
 
 watcher.on('ready', () => {
   if (!watcherInitialized) {
