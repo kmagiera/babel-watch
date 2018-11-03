@@ -11,8 +11,10 @@ const util = require('util');
 const fork = require('child_process').fork;
 const execSync = require('child_process').execSync;
 const commander = require('commander');
+const debounce = require('lodash.debounce');
 
 const RESTART_COMMAND = 'rs';
+const DEBOUNCE_DURATION = 100; //milliseconds
 
 const program = new commander.Command("babel-watch");
 
@@ -117,12 +119,15 @@ let watcherInitialized = (program.watch.length === 0);
 
 process.on('SIGINT', function() {
   watcher.close();
-  process.exit(1);
+  killApp();
+  process.exit(0);
 });
 
-watcher.on('change', handleChange);
-watcher.on('add', handleChange);
-watcher.on('unlink', handleChange);
+const debouncedHandleChange = debounce(handleChange, DEBOUNCE_DURATION);
+
+watcher.on('change', debouncedHandleChange);
+watcher.on('add', debouncedHandleChange);
+watcher.on('unlink', debouncedHandleChange);
 
 watcher.on('ready', () => {
   if (!watcherInitialized) {
@@ -207,9 +212,12 @@ function killApp() {
       if (currentPipeFd) {
         fs.closeSync(currentPipeFd); // silently close pipe fd
       }
-      if (currentPipeFilename) {
-        fs.unlinkSync(currentPipeFilename); // silently remove old pipe file
+      if (pipeFilename) {
+        fs.unlinkSync(pipeFilename); // silently remove old pipe file
       }
+      pipeFd = undefined;
+      childApp = undefined;
+      pipeFilename = undefined;
       restartAppInternal();
     };
     childApp.on('exit', restartOnce);
@@ -294,6 +302,7 @@ function restartAppInternal() {
   const app = fork(path.resolve(__dirname, 'runner.js'), { execArgv: runnerExecArgv });
 
   app.on('message', (data) => {
+    if (!data || data.event !== 'babel-watch-filename') return;
     const filename = data.filename;
     if (!program.disableAutowatch) {
       // use relative path for watch.add as it would let chokidar reconsile exclude patterns
@@ -324,6 +333,7 @@ function restartAppInternal() {
   });
 
   app.send({
+    event: 'babel-watch-start',
     pipe: pipeFilename,
     args: program.args,
     handleUncaughtExceptions: !program.disableExHandler,
