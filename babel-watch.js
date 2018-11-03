@@ -279,6 +279,7 @@ function restartAppInternal() {
   const app = fork(path.resolve(__dirname, 'runner.js'), { execArgv: runnerExecArgv });
 
   app.on('message', (data) => {
+    if (!data || data.event !== 'babel-watch-filename') return;
     const filename = data.filename;
     if (!program.disableAutowatch) {
       // use relative path for watch.add as it would let chokidar reconsile exclude patterns
@@ -307,6 +308,7 @@ function restartAppInternal() {
   });
 
   app.send({
+    event: 'babel-watch-start',
     pipe: pipeFilename,
     args: program.args,
     handleUncaughtExceptions: !program.disableExHandler,
