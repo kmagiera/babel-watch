@@ -202,9 +202,15 @@ function handleFileLoad(filename, callback) {
 
 function killApp() {
   if (childApp) {
-    childApp.on('exit', () => {
-      if (pipeFd) {
-        fs.closeSync(pipeFd); // silently close pipe fd
+    const currentPipeFd = pipeFd;
+    const currentPipeFilename = pipeFilename;
+
+    let hasRestarted = false;
+    const restartOnce = () => {
+      if (hasRestarted) return;
+      hasRestarted = true;
+      if (currentPipeFd) {
+        fs.closeSync(currentPipeFd); // silently close pipe fd
       }
       if (pipeFilename) {
         fs.unlinkSync(pipeFilename); // silently remove old pipe file
@@ -213,11 +219,28 @@ function killApp() {
       childApp = undefined;
       pipeFilename = undefined;
       restartAppInternal();
-    });
+    };
+    childApp.on('exit', restartOnce);
+    let isRunning = true;
     try {
-      childApp.kill('SIGHUP');
-    } catch (error) {
-      childApp.kill('SIGKILL');
+      process.kill(childApp.pid, 0);
+    } catch (e) {
+      isRunning = false;
+    }
+    if (isRunning) {
+      try {
+        childApp.kill('SIGHUP');
+      } catch (error) {
+        childApp.kill('SIGKILL');
+      }
+      pipeFd = undefined;
+      pipeFilename = undefined;
+      childApp = undefined;
+    } else {
+      pipeFd = undefined;
+      pipeFilename = undefined;
+      childApp = undefined;
+      restartOnce();
     }
   }
 }
@@ -290,18 +313,20 @@ function restartAppInternal() {
       const sourceBuf = new Buffer(source || 0);
       const mapBuf = new Buffer(sourceMap ? JSON.stringify(sourceMap) : 0);
       const lenBuf = new Buffer(4);
-      try {
-        lenBuf.writeUInt32BE(sourceBuf.length, 0);
-        fs.writeSync(pipeFd, lenBuf, 0, 4);
-        sourceBuf.length && fs.writeSync(pipeFd, sourceBuf, 0, sourceBuf.length);
+      if (pipeFd) {
+        try {
+          lenBuf.writeUInt32BE(sourceBuf.length, 0);
+          fs.writeSync(pipeFd, lenBuf, 0, 4);
+          sourceBuf.length && fs.writeSync(pipeFd, sourceBuf, 0, sourceBuf.length);
 
-        lenBuf.writeUInt32BE(mapBuf.length, 0);
-        fs.writeSync(pipeFd, lenBuf, 0, 4);
-        mapBuf.length && fs.writeSync(pipeFd, mapBuf, 0, mapBuf.length);
-      } catch (error) {
-        // EPIPE means `pipeFd` has been closed. We can ignore this
-        if (error.code !== 'EPIPE') {
-          throw error;
+          lenBuf.writeUInt32BE(mapBuf.length, 0);
+          fs.writeSync(pipeFd, lenBuf, 0, 4);
+          mapBuf.length && fs.writeSync(pipeFd, mapBuf, 0, mapBuf.length);
+        } catch (error) {
+          // EPIPE means `pipeFd` has been closed. We can ignore this
+          if (error.code !== 'EPIPE') {
+            throw error;
+          }
         }
       }
     });
