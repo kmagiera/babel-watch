@@ -25,7 +25,8 @@ function collect(val, memo) {
 
 program.option('-d, --debug [port]', 'Set debugger port')
 program.option('-B, --debug-brk', 'Enable debug break mode')
-program.option('-I, --inspect', 'Enable inspect mode')
+program.option('-I, --inspect [address]', 'Enable inspect mode')
+program.option('-X, --inspect-brk [address]', 'Enable inspect break mode')
 program.option('-o, --only [globs]', 'Matching files will be transpiled');
 program.option('-i, --ignore [globs]', 'Matching files will not be transpiled');
 program.option('-e, --extensions [extensions]', 'List of extensions to hook into [.es6,.js,.es,.jsx]');
@@ -288,15 +289,29 @@ function restartAppInternal() {
   // Support for --debug option
   const runnerExecArgv = process.execArgv.slice();
   if (program.debug) {
-    runnerExecArgv.push('--debug=' + program.debug);
+    runnerExecArgv.push(typeof(program.debug) === 'boolean'
+      ? `--debug` 
+      : `--debug=${program.debug}`
+    )
+  }
+  // Support for --debug-brk option
+  if(program.debugBrk) {
+    runnerExecArgv.push('--debug-brk');
   }
   // Support for --inspect option
   if (program.inspect) {
-    runnerExecArgv.push('--inspect');
+    // Somehow, the default port (2992) is being passed from the node command line. Wipe it out.
+    const inspectArg = typeof(program.inspect) === 'boolean'
+     ? `--inspect` 
+     : `--inspect=${program.inspect}`
+    runnerExecArgv.push(inspectArg);
   }
-  // Support for --debug-brk
-  if(program.debugBrk) {
-    runnerExecArgv.push('--debug-brk');
+  // Support for --inspect-brk option
+  if (program.inspectBrk) {
+    const inspectBrkArg = typeof(program.inspectBrk) === 'boolean' 
+    ? `--inspect-brk` 
+    : `--inspect-brk=${program.inspectBrk}`
+    runnerExecArgv.push(inspectBrkArg)
   }
 
   const app = fork(path.resolve(__dirname, 'runner.js'), { execArgv: runnerExecArgv });
