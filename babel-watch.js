@@ -12,6 +12,9 @@ const fork = require('child_process').fork;
 const execSync = require('child_process').execSync;
 const commander = require('commander');
 const debounce = require('lodash.debounce');
+const isString = require('lodash.isstring');
+const isArray = require('lodash.isarray');
+const isRegExp = require('lodash.isregexp');
 
 const RESTART_COMMAND = 'rs';
 const DEBOUNCE_DURATION = 100; //milliseconds
@@ -27,16 +30,16 @@ function collect(val, memo) {
 // https://github.com/babel/babel/commit/0df0c696a93889f029982bf36d34346a039b1920
 function regexify(val) {
   if (!val) return new RegExp;
-  if (_.isArray(val)) val = val.join("|");
-  if (_.isString(val)) return new RegExp(val || "");
-  if (_.isRegExp(val)) return val;
+  if (isArray(val)) val = val.join("|");
+  if (isString(val)) return new RegExp(val || "");
+  if (isRegExp(val)) return val;
   throw new TypeError("illegal type for regexify");
 };
 
 function arrayify(val) {
   if (!val) return [];
-  if (_.isString(val)) return exports.list(val);
-  if (_.isArray(val)) return val;
+  if (isString(val)) return exports.list(val);
+  if (isArray(val)) return val;
   throw new TypeError("illegal type for arrayify");
 };
 
