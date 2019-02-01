@@ -27,13 +27,14 @@
   },
   "homepage": "https://github.com/kmagiera/babel-watch#readme",
   "dependencies": {
+    "@babel/core": "^7.0.0-beta.44",
     "chokidar": "^1.4.3",
     "commander": "^2.9.0",
     "lodash.debounce": "^4.0.8",
     "source-map-support": "^0.4.0"
   },
   "peerDependencies": {
-    "babel-core": "6.5.1 - 6.6.0 || ^6.6.x"
+    "@babel/core": "^7.0.0"
   },
   "bin": {
     "babel-watch": "./babel-watch.js"
