@@ -38,7 +38,7 @@ function regexify(val) {
 
 function arrayify(val) {
   if (!val) return [];
-  if (isString(val)) return exports.list(val);
+  if (isString(val)) return (val ? val.split(',') : []);
   if (isArray(val)) return val;
   throw new TypeError("illegal type for arrayify");
 };
