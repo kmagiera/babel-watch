@@ -99,7 +99,8 @@ Using `babel-node` or `babel-watch` is not recommended in production environment
 
 ## Babel compatibility
 
- * `babel-watch >= 2.0.2` is compatible with `babel-core` version `6.5.1` and above
+ * `babel-watch >= 2.0.7` is compatible with `@babel/core` version `7.0.0` and above 
+ * `babel-watch < 2.0.7 && >= 2.0.2` is compatible with `babel-core` version `6.5.1`
  * `babel-watch <= 2.0.1` is compatible with `babel-core` from `6.4.x` up to `6.5.0`
 
 *(This is due to the babel's "option manager" API change in `babel-core@6.5.1`)*
