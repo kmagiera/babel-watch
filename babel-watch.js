@@ -7,13 +7,11 @@ const path = require('path');
 const babel = require('@babel/core');
 const fs = require('fs');
 const os = require('os');
-const util = require('util');
 const fork = require('child_process').fork;
 const execSync = require('child_process').execSync;
 const commander = require('commander');
 const debounce = require('lodash.debounce');
 const isString = require('lodash.isstring');
-const isArray = require('lodash.isarray');
 const isRegExp = require('lodash.isregexp');
 
 const RESTART_COMMAND = 'rs';
@@ -30,7 +28,7 @@ function collect(val, memo) {
 // https://github.com/babel/babel/commit/0df0c696a93889f029982bf36d34346a039b1920
 function regexify(val) {
   if (!val) return new RegExp;
-  if (isArray(val)) val = val.join("|");
+  if (Array.isArray(val)) val = val.join("|");
   if (isString(val)) return new RegExp(val || "");
   if (isRegExp(val)) return val;
   throw new TypeError("illegal type for regexify");
@@ -39,7 +37,7 @@ function regexify(val) {
 function arrayify(val) {
   if (!val) return [];
   if (isString(val)) return (val ? val.split(',') : []);
-  if (isArray(val)) return val;
+  if (Array.isArray(val)) return val;
   throw new TypeError("illegal type for arrayify");
 };
 
@@ -213,7 +211,6 @@ function handleFileLoad(filename, callback) {
 function killApp() {
   if (childApp) {
     const currentPipeFd = pipeFd;
-    const currentPipeFilename = pipeFilename;
 
     let hasRestarted = false;
     const restartOnce = () => {
@@ -299,7 +296,7 @@ function restartAppInternal() {
   const runnerExecArgv = process.execArgv.slice();
   if (program.debug) {
     runnerExecArgv.push(typeof(program.debug) === 'boolean'
-      ? `--debug` 
+      ? `--debug`
       : `--debug=${program.debug}`
     )
   }
@@ -311,14 +308,14 @@ function restartAppInternal() {
   if (program.inspect) {
     // Somehow, the default port (2992) is being passed from the node command line. Wipe it out.
     const inspectArg = typeof(program.inspect) === 'boolean'
-     ? `--inspect` 
+     ? `--inspect`
      : `--inspect=${program.inspect}`
     runnerExecArgv.push(inspectArg);
   }
   // Support for --inspect-brk option
   if (program.inspectBrk) {
-    const inspectBrkArg = typeof(program.inspectBrk) === 'boolean' 
-    ? `--inspect-brk` 
+    const inspectBrkArg = typeof(program.inspectBrk) === 'boolean'
+    ? `--inspect-brk`
     : `--inspect-brk=${program.inspectBrk}`
     runnerExecArgv.push(inspectBrkArg)
   }
