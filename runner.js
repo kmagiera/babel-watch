@@ -8,7 +8,7 @@ let sources = {};
 let maps = {};
 
 let pipeFd;
-const BUFFER = new Buffer(10 * 1024);
+const BUFFER = new Buffer.alloc(10 * 1024);
 
 // Node by default uses '.js' loader to load all the files with unknown extensions
 const DEFAULT_LOADER = require.extensions['.js'];
@@ -23,7 +23,7 @@ function readLength(fd) {
 
 function readFileFromPipeSync(fd) {
   let length = readLength(fd);
-  let result = new Buffer(0);
+  let result = new Buffer.alloc(0);
   while (length > 0) {
     const newBytes = fs.readSync(fd, BUFFER, 0, Math.min(BUFFER.length, length));
     length -= newBytes;
