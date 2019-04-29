@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/kmagiera/babel-watch#readme",
   "dependencies": {
-    "chokidar": "^2.0.4",
+    "chokidar": "^2.1.5",
     "commander": "^2.9.0",
     "lodash.debounce": "^4.0.8",
     "lodash.isregexp": "^4.0.1",
