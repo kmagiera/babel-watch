@@ -131,11 +131,10 @@ process.on('SIGINT', function() {
   process.exit(0);
 });
 
-const debouncedHandleChange = debounce(handleChange, DEBOUNCE_DURATION);
 
-watcher.on('change', debouncedHandleChange);
-watcher.on('add', debouncedHandleChange);
-watcher.on('unlink', debouncedHandleChange);
+watcher.on('change', handleChange);
+watcher.on('add', handleChange);
+watcher.on('unlink', handleChange);
 
 watcher.on('ready', () => {
   if (!watcherInitialized) {
@@ -158,13 +157,15 @@ stdin.on('data', (data) => {
   }
 });
 
+const debouncedRestartApp = debounce(restartApp, DEBOUNCE_DURATION)
+
 function handleChange(file) {
   const absoluteFile = file.startsWith('/') ? file : path.join(cwd, file);
   delete cache[absoluteFile];
   delete errors[absoluteFile];
 
   // file is in use by the app, let's restart!
-  restartApp();
+  debouncedRestartApp();
 }
 
 function generateTempFilename() {
@@ -332,7 +333,7 @@ function restartAppInternal() {
     }
     handleFileLoad(filename, (source, sourceMap) => {
       const sourceBuf = new Buffer.from(source || '');
-      const mapBuf = new Buffer.from(sourceMap ? JSON.stringify(sourceMap) : 0);
+      const mapBuf = new Buffer.from(sourceMap ? JSON.stringify(sourceMap) : []);
       const lenBuf = new Buffer.alloc(4);
       if (pipeFd) {
         try {
