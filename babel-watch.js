@@ -332,7 +332,7 @@ function restartAppInternal() {
     }
     handleFileLoad(filename, (source, sourceMap) => {
       const sourceBuf = new Buffer.from(source || '');
-      const mapBuf = new Buffer.from(sourceMap ? JSON.stringify(sourceMap) : 0);
+      const mapBuf = new Buffer.from(sourceMap ? JSON.stringify(sourceMap) : []);
       const lenBuf = new Buffer.alloc(4);
       if (pipeFd) {
         try {
