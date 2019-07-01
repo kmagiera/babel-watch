@@ -6,6 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "engines": {
+    "node": ">= 8"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kmagiera/babel-watch.git"
@@ -27,12 +30,12 @@
   },
   "homepage": "https://github.com/kmagiera/babel-watch#readme",
   "dependencies": {
-    "chokidar": "^2.0.4",
-    "commander": "^2.9.0",
+    "chokidar": "^3.0.1",
+    "commander": "^2.20.0",
     "lodash.debounce": "^4.0.8",
     "lodash.isregexp": "^4.0.1",
     "lodash.isstring": "^4.0.1",
-    "source-map-support": "^0.4.0"
+    "source-map-support": "^0.5.12"
   },
   "peerDependencies": {
     "@babel/core": "^7.0.0"
