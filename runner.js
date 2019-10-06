@@ -15,7 +15,7 @@ const DEFAULT_LOADER = require.extensions['.js'];
 
 function readLength(fd) {
   let bytes = 0;
-  while (bytes !== 4) {
+  while (typeof bytes === 'number' && bytes !== 4) {
     bytes = fs.readSync(fd, BUFFER, 0, 4);
   }
   return BUFFER.readUInt32BE(0);
