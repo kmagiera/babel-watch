@@ -8,11 +8,13 @@ const babel = require('@babel/core');
 const fs = require('fs');
 const os = require('os');
 const fork = require('child_process').fork;
+const util = require('util');
 const execSync = require('child_process').execSync;
 const commander = require('commander');
 const debounce = require('lodash.debounce');
 const isString = require('lodash.isstring');
 const isRegExp = require('lodash.isregexp');
+const chalk = require('chalk');
 const Debug = require('debug');
 
 const debugInit = Debug('babel-watch:init');
@@ -60,9 +62,10 @@ program.option('-x, --exclude [dir]', 'Exclude matching directory/files from wat
 program.option('-L, --use-polling', 'In some filesystems watch events may not work correcly. This option enables "polling" which should mitigate this type of issue');
 program.option('-D, --disable-autowatch', 'Don\'t automatically start watching changes in files "required" by the program');
 program.option('-H, --disable-ex-handler', 'Disable source-map-enhanced uncaught exception handler. You may want to use this option in case your app registers a custom uncaught exception handler');
-program.option('-m, --message [string]', 'Set custom message displayed on restart', '>>> RESTARTING <<<');
+program.option('-m, --message [string]', 'Set custom message displayed on restart', '>>> Restarting due to change in file(s): %s');
 program.option('--clear-console', 'If set, will clear console on each restart. Restart message will not be shown');
 program.option('--before-restart <command>', 'Set a custom command to be run before each restart, for example "npm run lint"');
+program.option('--no-colors', 'Don\'t use console colors');
 
 const pkg = require('./package.json');
 program.version(pkg.version);
@@ -110,7 +113,6 @@ const cwd = process.cwd();
 const only = program.only;
 const ignore = program.ignore;
 const transpileExtensions = program.extensions;
-const restartMessage = program.message;
 
 const mainModule = program.args[0];
 if (!mainModule) {
@@ -168,7 +170,8 @@ stdin.on('data', (data) => {
   }
 });
 
-const debouncedRestartApp = debounce(restartApp, DEBOUNCE_DURATION)
+const debouncedRestartApp = debounce(restartApp, DEBOUNCE_DURATION);
+let changedFiles = [];
 
 function handleChange(file) {
   const absoluteFile = file.startsWith('/') ? file : path.join(cwd, file);
@@ -177,6 +180,7 @@ function handleChange(file) {
     delete cache[absoluteFile];
     delete errors[absoluteFile];
 
+    changedFiles.push(file); // for logging
     // file is in use by the app, let's restart!
     debouncedRestartApp();
   }
@@ -280,7 +284,12 @@ function restartApp() {
   if (!watcherInitialized) return;
   if (childApp) {
     if (program.clearConsole) console.clear();
-    else if (program.message) console.log(program.message);
+    else if (program.message) {
+      let message = program.message;
+      // Include changed files when possible.
+      if (message.includes('%s')) message = util.format(message, changedFiles.join(','));
+      log(message);
+    }
     // kill app early as `compile` may take a while
     killApp();
   } else {
@@ -289,12 +298,18 @@ function restartApp() {
   }
 }
 
+function log(...msg) {
+  const preamble = program.colors ? chalk.blue.bold.underline('babel-watch:') : '>>> babel-watch:';
+  console.log(preamble, ...msg);
+}
+
 function restartAppInternal() {
   if (Object.keys(errors).length != 0) {
     // There were some transpilation errors, don't start unless solved or invalid file is removed
     return;
   }
 
+  changedFiles = []; // reset state
   pipeFilename = generateTempFilename();
 
   if (os.platform() === 'win32') {
