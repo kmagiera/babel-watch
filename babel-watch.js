@@ -62,6 +62,7 @@ program.option('-D, --disable-autowatch', 'Don\'t automatically start watching c
 program.option('-H, --disable-ex-handler', 'Disable source-map-enhanced uncaught exception handler. You may want to use this option in case your app registers a custom uncaught exception handler');
 program.option('-m, --message [string]', 'Set custom message displayed on restart', '>>> RESTARTING <<<');
 program.option('--clear-console', 'If set, will clear console on each restart. Restart message will not be shown');
+program.option('--before-restart <command>', 'Set a custom command to be run before each restart, for example "npm run lint"');
 
 const pkg = require('./package.json');
 program.version(pkg.version);
@@ -338,6 +339,11 @@ function restartAppInternal() {
     ? `--inspect-brk`
     : `--inspect-brk=${program.inspectBrk}`
     runnerExecArgv.push(inspectBrkArg)
+  }
+
+  if (program.beforeRestart) {
+    log(`Running command "${program.beforeRestart}" before restart.`);
+    execSync(program.beforeRestart, {stdio: 'inherit'}); // pass stdio to console
   }
 
   const app = fork(path.resolve(__dirname, 'runner.js'), { execArgv: runnerExecArgv });
