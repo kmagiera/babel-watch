@@ -119,7 +119,7 @@ const cwd = process.cwd();
 const only = program.only;
 const ignore = program.ignore;
 const transpileExtensions = program.extensions;
-const debug = Boolean(program.debug || program.debugBrk || program.inspect)
+const debug = Boolean(program.debug || program.debugBrk || program.inspect || program.inspectBrk)
 
 const mainModule = program.args[0];
 if (!mainModule) {
