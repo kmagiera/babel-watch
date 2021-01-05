@@ -67,6 +67,14 @@ Then use `babel-watch` in your `package.json` in scripts section like this:
 
 While the `babel-watch` process is running you may type "rs" and hit return in the terminal to force reload the app.
 
+## Node Options
+
+To pass options directly to Node that are not shown above, use `NODE_OPTIONS`. For example:
+
+```bash
+NODE_OPTIONS="--experimental-worker" babel-watch app.js
+```
+
 ### Example usage:
 
 In most of the cases you would rely on "autowatch" to monitor all the files that are required by your node application. In that case you just run:
@@ -99,7 +107,7 @@ Demo of `nodemon + babel-node` (on the left) and `babel-watch` reloading simple 
 
 ![](https://raw.githubusercontent.com/kmagiera/babel-watch/master/docs/demo.gif)
 
-## Important information
+## Do not use in production
 
 Using `babel-node` or `babel-watch` is not recommended in production environment. For the production use it is much better practice to build your node application using `babel` and run it using just `node`.
 
@@ -145,7 +153,6 @@ The reason why you're getting the error is because the babel regenerator plugin 
 #### Still having some issues
 
 Try searching over the issues on GitHub [here](https://github.com/kmagiera/babel-watch/issues). If you don't find anything that would help feel free to open new issue!
-
 
 ## Contributing
 
