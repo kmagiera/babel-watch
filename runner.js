@@ -90,6 +90,7 @@ process.on('message', (options) => {
   replaceExtensionHooks(options.transpileExtensions);
   sourceMapSupport.install({
     environment: 'node',
+    hookRequire: options.debug,
     handleUncaughtExceptions: !!options.handleUncaughtExceptions,
     retrieveSourceMap(filename) {
       const map = maps && maps[filename];
