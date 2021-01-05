@@ -43,5 +43,8 @@
   },
   "bin": {
     "babel-watch": "./babel-watch.js"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.12.10"
   }
 }
