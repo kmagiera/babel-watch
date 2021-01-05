@@ -28,7 +28,7 @@ With Yarn:
   yarn add --dev babel-watch
 ```
 
-(Make sure you have `babel-core` installed as dependency in your project as `babel-watch` only defines `babel-core` as a "peerDependency")
+(Make sure you have `@babel/core` installed as dependency in your project as `babel-watch` only defines `@babel/core` as a "peerDependency")
 
 Then use `babel-watch` in your `package.json` in scripts section like this:
 ```json
@@ -42,21 +42,23 @@ Then use `babel-watch` in your `package.json` in scripts section like this:
 `babel-watch` was made to be compatible with `babel-node` and `nodemon` options. Not all of them are supported yet, here is a short list of supported command line options:
 
 ```
-    -d, --debug [port]             Start debugger on port
+    -d, --debug [port]             Set debugger port
     -B, --debug-brk                Enable debug break mode
-    -I, --inspect                  Enable inspect mode
+    -I, --inspect [address]        Enable inspect mode
     -X, --inspect-brk [address]    Enable inspect break mode
-    -o, --only [globs]             Matching files will be transpiled
-    -i, --ignore [globs]           Matching files will not be transpiled
-    -e, --extensions [extensions]  List of extensions to hook into [.es6,.js,.es,.jsx]
-    -p, --plugins [string]
-    -b, --presets [string]
-    -w, --watch [dir]              Watch directory "dir" or files. Use once for each directory or file to watch
-    -x, --exclude [dir]            Exclude matching directory/files from watcher. Use once for each directory or file.
-    -L, --use-polling              In some filesystems watch events may not work correcly. This option enables "polling" which should mitigate this type of issues
+    -o, --only [globs]             Matching files will *only* be transpiled (default: null)
+    -i, --ignore [globs]           Matching files will not be transpiled. Default value is "node_modules". If you specify this option and still want to exclude modules, be sure to add it to the list.
+                                   (default: ["node_modules"])
+    -e, --extensions [extensions]  List of extensions to hook into (default: [".js",".jsx",".es6",".es",".mjs"])
+    -w, --watch [dir]              Watch directory "dir" or files. Use once for each directory or file to watch (default: [])
+    -x, --exclude [dir]            Exclude matching directory/files from watcher. Use once for each directory or file (default: [])
+    -L, --use-polling              In some filesystems watch events may not work correcly. This option enables "polling" which should mitigate this type of issue
     -D, --disable-autowatch        Don't automatically start watching changes in files "required" by the program
-    -H, --disable-ex-handler       Disable source-map-enhanced uncaught exception handler. (you may want to use this option in case your app registers a custom uncaught exception handler)
-    -m, --message [string]         Set custom message displayed on restart (default is ">>> RESTARTING <<<")
+    -H, --disable-ex-handler       Disable source-map-enhanced uncaught exception handler. You may want to use this option in case your app registers a custom uncaught exception handler
+    -m, --message [string]         Set custom message displayed on restart (default: ">>> RESTARTING <<<")
+    --clear-console                If set, will clear console on each restart. Restart message will not be shown
+    -V, --version                  output the version number
+    -h, --help                     display help for command
 ```
 
 While the `babel-watch` process is running you may type "rs" and hit return in the terminal to force reload the app.
@@ -109,6 +111,10 @@ Using `babel-node` or `babel-watch` is not recommended in production environment
 
 ## Troubleshooting
 
+#### Debugging
+
+If you want to know which file caused a restart, or why a file was not processed, add `env DEBUG="babel-watch:*"` before your command to see babel-watch internals. Please do this before filing a bug report.
+
 #### Application doesn't restart automatically
 
 There are a couple of reasons that could be causing that:
@@ -116,14 +122,13 @@ There are a couple of reasons that could be causing that:
 1. You filesystem configuration doesn't trigger filewatch notification (this could happen for example when you have `babel-watch` running within docker container and have filesystem mirrored). In that case try running `babel-watch` with `-L` option which will enable polling for file changes.
 2. Files you're updating are blacklisted. Check the options you pass to babel-watch and verify that files you're updating are being used by your app and their name does not fall into any exclude pattern (option `-x` or `--exclude`).
 
-
 #### Application doesn't restart when I change one of the view templates (html file or similar):
 
 You perhaps are using autowatch. Apparently since view templates are not loaded using `require` command but with `fs.read` instead, therefore autowatch is not able to detect that they are being used. You can still use autowatch for all the js sources, but need to specify the directory name where you keep your view templates so that changes in these files can trigger app restart. This can be done using `--watch` option (e.g. `babel-watch --watch views app.js`).
 
-#### I'm getting an error: *Cannot find module 'babel-core'*
+#### I'm getting an error: *Cannot find module '@babel/core'*
 
-`babel-watch` does not have `babel-core` listed as a direct dependency but as a "peerDependency". If you're using `babel` in your app you should already have `babel-core` installed. If not you should do `npm install --save-dev babel-core`. We decided not to make `babel-core` a direct dependency as in some cases having it defined this way would make your application pull two versions of `babel-core` from `npm` during installation and since `babel-core` is quite a huge package that's something we wanted to avoid.
+`babel-watch` does not have `@babel/core` listed as a direct dependency but as a "peerDependency". If you're using `babel` in your app you should already have `@babel/core` installed. If not you should do `npm install --save-dev @babel/core`. We decided not to make `@babel/core` a direct dependency as in some cases having it defined this way would make your application pull two versions of `@babel/core` from `npm` during installation and since `@babel/core` is quite a huge package that's something we wanted to avoid.
 
 #### Every time I run a script, I get a load of temporary files clogging up my project root
 
@@ -132,7 +137,6 @@ You perhaps are using autowatch. Apparently since view templates are not loaded 
 #### I'm getting `regeneratorRuntime is not defined` error when running with babel-watch but babel-node runs just fine
 
 The reason why you're getting the error is because the babel regenerator plugin (that gives you support for async functions) requires a runtime library to be included with your application. You will get the same error when you build your app with `babel` first and then run with `node`. It works fine with `babel-node` because it includes `babel-polyfill` module automatically whenever it runs your app, even if you don't use features like async functions (that's one of the reason why its startup time is so long). Please see [this answer on stackoverflow](http://stackoverflow.com/a/36821986/1665044) to learn how to fix this issue
-
 
 #### Still having some issues
 
