@@ -60,6 +60,7 @@ Then use `babel-watch` in your `package.json` in scripts section like this:
     --before-restart <command>     Set a custom command to be run before each restart, for example "npm run lint"
     --no-colors                    Don't use console colors
     --restart-command <command>    Set a string to issue a manual restart. Set to `false` to pass stdin directly to process. (default: "rs")
+    --no-debug-source-maps         When using "--inspect" options, inline source-maps are automatically turned on. Set this option to disable that behavior
     -V, --version                  output the version number
     -h, --help                     display help for command
 ```

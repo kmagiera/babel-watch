@@ -72,6 +72,7 @@ program.option('--clear-console', 'If set, will clear console on each restart. R
 program.option('--before-restart <command>', 'Set a custom command to be run before each restart, for example "npm run lint"');
 program.option('--no-colors', 'Don\'t use console colors');
 program.option('--restart-command <command>', 'Set a string to issue a manual restart. Set to `false` to pass stdin directly to process.', booleanify, 'rs');
+program.option('--no-debug-source-maps', 'When using "--inspect" options, inline source-maps are automatically turned on. Set this option to disable that behavior')
 
 const pkg = require('./package.json');
 program.version(pkg.version);
@@ -123,7 +124,8 @@ const debug = Boolean(program.debug || program.debugBrk || program.inspect || pr
 
 const mainModule = program.args[0];
 if (!mainModule) {
-  console.error('Main script not specified');
+  console.error('Main script not specified. If you are using `--inspect` or similar options, please add a `--` like so:');
+  console.error('> babel-watch --inspect -- app.js');
   process.exit(1);
 }
 if (!mainModule.startsWith('.') && !mainModule.startsWith('/')) {
@@ -439,7 +441,7 @@ function compile(filename, callback) {
   // Do not process config files since has already been done with the OptionManager
   // calls above and would introduce duplicates.
   opts.babelrc = false;
-  opts.sourceMaps = debug ?  'inline' : true;
+  opts.sourceMaps = (debug && program.debugSourceMaps) ?  'inline' : true;
   opts.ast = false;
 
   return babel.transformFile(filename, opts, (err, result) => {
