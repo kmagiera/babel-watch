@@ -41,13 +41,14 @@ function arrayify(val) {
   throw new TypeError("illegal type for arrayify");
 };
 
+class IgnoredFileError extends Error {};
 
 program.option('-d, --debug [port]', 'Set debugger port')
 program.option('-B, --debug-brk', 'Enable debug break mode')
 program.option('-I, --inspect [address]', 'Enable inspect mode')
 program.option('-X, --inspect-brk [address]', 'Enable inspect break mode')
 program.option('-o, --only [globs]', 'Matching files will be transpiled');
-program.option('-i, --ignore [globs]', 'Matching files will not be transpiled');
+program.option('-i, --ignore [globs]', 'Matching files will not be transpiled. Default value is "node_modules". If you specify this option and still want to exclude modules, be sure to add it to the list.');
 program.option('-e, --extensions [extensions]', 'List of extensions to hook into [.es6,.js,.es,.jsx]');
 program.option('-w, --watch [dir]', 'Watch directory "dir" or files. Use once for each directory or file to watch', collect, []);
 program.option('-x, --exclude [dir]', 'Exclude matching directory/files from watcher. Use once for each directory or file.', collect, []);
@@ -91,11 +92,12 @@ program.parse(process.argv);
 
 const cwd = process.cwd();
 
-let only, ignore;
-
-
+let only = null;
 if (program.only != null) only = arrayify(program.only, regexify);
-if (program.ignore != null) ignore = arrayify(program.ignore, regexify);
+let ignore = ['node_modules'];
+if (program.ignore != null) {
+  ignore = arrayify(program.ignore, regexify);
+}
 
 let transpileExtensions = babel.DEFAULT_EXTENSIONS;
 
@@ -116,6 +118,7 @@ let childApp, pipeFd, pipeFilename;
 
 const cache = {};
 const errors = {};
+const ignored = {};
 
 const watcher = chokidar.watch(program.watch, {
   persistent: true,
@@ -130,7 +133,6 @@ process.on('SIGINT', function() {
   killApp();
   process.exit(0);
 });
-
 
 watcher.on('change', handleChange);
 watcher.on('add', handleChange);
@@ -161,11 +163,15 @@ const debouncedRestartApp = debounce(restartApp, DEBOUNCE_DURATION)
 
 function handleChange(file) {
   const absoluteFile = file.startsWith('/') ? file : path.join(cwd, file);
-  delete cache[absoluteFile];
-  delete errors[absoluteFile];
+  const isUsed = Boolean(cache[absoluteFile] || errors[absoluteFile]);
+  if (isUsed) {
+    delete cache[absoluteFile];
+    delete errors[absoluteFile];
 
-  // file is in use by the app, let's restart!
-  debouncedRestartApp();
+    // file is in use by the app, let's restart!
+    debouncedRestartApp();
+  }
+  // File was not in use, don't restart
 }
 
 function generateTempFilename() {
@@ -191,6 +197,11 @@ function handleFileLoad(filename, callback) {
   if (!shouldIgnore(filename)) {
     compile(filename, (err, result) => {
       if (err) {
+        // Intentional ignore
+        if (err instanceof IgnoredFileError) {
+          ignored[filename] = true;
+          return callback();
+        }
         console.error('Babel compilation error', err.stack);
         errors[filename] = true;
         return;
@@ -253,20 +264,17 @@ function killApp() {
   }
 }
 
-function prepareRestart() {
-  if (watcherInitialized && childApp) {
+function restartApp() {
+  if (!watcherInitialized) return;
+  if (childApp) {
     // kill app early as `compile` may take a while
     var restartMessage = program.message ? program.message : ">>> RESTARTING <<<";
     console.log(restartMessage);
     killApp();
   } else {
+    // First start
     restartAppInternal();
   }
-}
-
-function restartApp() {
-  if (!watcherInitialized) return;
-  prepareRestart();
 }
 
 function restartAppInternal() {
@@ -359,28 +367,33 @@ function restartAppInternal() {
     pipe: pipeFilename,
     args: program.args,
     handleUncaughtExceptions: !program.disableExHandler,
-    transpileExtensions: transpileExtensions,
+    transpileExtensions,
   });
   pipeFd = fs.openSync(pipeFilename, 'w');
   childApp = app;
 }
 
+// Only ignore based on extension for now, which we keep track of on our own for file watcher
+// purposes. `ignore` and `only` are passed to `babel.OptionManager` to let it make its own
+// determinations.
 function shouldIgnore(filename) {
-  if (transpileExtensions.indexOf(path.extname(filename)) < 0) {
+  if (!transpileExtensions.includes(path.extname(filename))) {
     return true;
-  } else if (!ignore && !only) {
-    // Ignore node_modules by default
-    return path.relative(cwd, filename).split(path.sep).indexOf('node_modules') >= 0;
-  } else {
-    return babel.util.shouldIgnore(filename, ignore || [], only);
+  } else if (ignored[filename]) {
+    // ignore cache for extra speed
+    return true;
   }
+  return false;
 }
 
-
 function compile(filename, callback) {
-  const optsManager = new babel.OptionManager;
+  const opts = new babel.OptionManager().init({ filename, ignore, only });
 
-  const opts = optsManager.init({ filename });
+  // If opts is not present, the file is ignored, either by explicit input into
+  // babel-watch or by `.babelignore`.
+  if (!opts) {
+    return callback(new IgnoredFileError());
+  }
   // Do not process config files since has already been done with the OptionManager
   // calls above and would introduce duplicates.
   opts.babelrc = false;
