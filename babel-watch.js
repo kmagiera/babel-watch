@@ -48,8 +48,8 @@ function arrayify(val) {
 
 class IgnoredFileError extends Error {};
 
-program.option('-d, --debug [port]', 'Set debugger port')
-program.option('-B, --debug-brk', 'Enable debug break mode')
+program.option('-d, --debug [port]', 'Enable debug mode (deprecated) with optional port')
+program.option('-B, --debug-brk', 'Enable debug break mode (deprecated)')
 program.option('-I, --inspect [address]', 'Enable inspect mode')
 program.option('-X, --inspect-brk [address]', 'Enable inspect break mode')
 program.option('-o, --only [globs]', 'Matching files will *only* be transpiled', arrayify, null);
@@ -88,6 +88,9 @@ program.on('--help', () => {
     $ babel-watch server.js
     $ babel-watch -x templates server.js
     $ babel-watch server.js --port 8080
+    $ babel-watch --inspect -- server.js # \`--\` is required due to parsing ambiguity
+    $ babel-watch --inspect-brk -- server.js # \`--\` is required due to parsing ambiguity
+    $ babel-watch --inspect-brk 127.0.0.1:9229 server.js
 
   Debugging:
 
@@ -318,7 +321,7 @@ function restartAppInternal() {
     )
   }
   // Support for --debug-brk option
-  if(program.debugBrk) {
+  if (program.debugBrk) {
     runnerExecArgv.push('--debug-brk');
   }
   // Support for --inspect option
