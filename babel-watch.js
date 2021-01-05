@@ -56,6 +56,7 @@ program.option('-L, --use-polling', 'In some filesystems watch events may not wo
 program.option('-D, --disable-autowatch', 'Don\'t automatically start watching changes in files "required" by the program');
 program.option('-H, --disable-ex-handler', 'Disable source-map-enhanced uncaught exception handler. You may want to use this option in case your app registers a custom uncaught exception handler');
 program.option('-m, --message [string]', 'Set custom message displayed on restart', '>>> RESTARTING <<<');
+program.option('--clear-console', 'If set, will clear console on each restart. Restart message will not be shown');
 
 const pkg = require('./package.json');
 program.version(pkg.version);
@@ -259,8 +260,9 @@ function killApp() {
 function restartApp() {
   if (!watcherInitialized) return;
   if (childApp) {
+    if (program.clearConsole) console.clear();
+    else if (program.message) console.log(program.message);
     // kill app early as `compile` may take a while
-    if (restartMessage) console.log(restartMessage);
     killApp();
   } else {
     // First start
