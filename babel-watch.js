@@ -21,7 +21,6 @@ const debugInit = Debug('babel-watch:init');
 const debugCompile = Debug('babel-watch:compile');
 const debugWatcher = Debug('babel-watch:watcher');
 
-const RESTART_COMMAND = 'rs';
 const DEBOUNCE_DURATION = 100; //milliseconds
 
 const program = new commander.Command("babel-watch");
@@ -48,6 +47,12 @@ function arrayify(val) {
   throw new TypeError("illegal type for arrayify");
 };
 
+function booleanify(val) {
+  if (val === "true" || val == 1) return true;
+  if (val === "false" || val == 0 || !val) return false;
+  return val;
+}
+
 class IgnoredFileError extends Error {};
 
 program.option('-d, --debug [port]', 'Enable debug mode (deprecated) with optional port')
@@ -66,13 +71,14 @@ program.option('-m, --message [string]', 'Set custom message displayed on restar
 program.option('--clear-console', 'If set, will clear console on each restart. Restart message will not be shown');
 program.option('--before-restart <command>', 'Set a custom command to be run before each restart, for example "npm run lint"');
 program.option('--no-colors', 'Don\'t use console colors');
+program.option('--restart-command <command>', 'Set a string to issue a manual restart. Set to `false` to pass stdin directly to process.', booleanify, 'rs');
 
 const pkg = require('./package.json');
 program.version(pkg.version);
 program.usage('[options] [script.js] [args]');
 program.description('babel-watch is a babel-js node app runner that lets you reload the app on JS source file changes.');
 program.on('--help', () => {
-  console.log(`\
+  console.log(`
   About "autowatch":
 
   "Autowatch" is the default behavior in babel-watch. Thanks to that mechanism babel-watch will automatically
@@ -162,13 +168,15 @@ watcher.on('error', error => {
 });
 
 // Restart the app when a sequence of keys has been pressed ('rs' by refault)
-const stdin = process.stdin;
-stdin.setEncoding('utf8');
-stdin.on('data', (data) => {
-  if (String(data).trim() === RESTART_COMMAND) {
-    restartApp();
-  }
-});
+if (program.restartCommand) {
+  const stdin = process.stdin;
+  stdin.setEncoding('utf8');
+  stdin.on('data', (data) => {
+    if (String(data).trim() === program.restartCommand) {
+      restartApp();
+    }
+  });
+}
 
 const debouncedRestartApp = debounce(restartApp, DEBOUNCE_DURATION);
 let changedFiles = [];

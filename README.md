@@ -42,8 +42,8 @@ Then use `babel-watch` in your `package.json` in scripts section like this:
 `babel-watch` was made to be compatible with `babel-node` and `nodemon` options. Not all of them are supported yet, here is a short list of supported command line options:
 
 ```
-    -d, --debug [port]             Set debugger port
-    -B, --debug-brk                Enable debug break mode
+    -d, --debug [port]             Enable debug mode (deprecated) with optional port
+    -B, --debug-brk                Enable debug break mode (deprecated)
     -I, --inspect [address]        Enable inspect mode
     -X, --inspect-brk [address]    Enable inspect break mode
     -o, --only [globs]             Matching files will *only* be transpiled (default: null)
@@ -55,8 +55,11 @@ Then use `babel-watch` in your `package.json` in scripts section like this:
     -L, --use-polling              In some filesystems watch events may not work correcly. This option enables "polling" which should mitigate this type of issue
     -D, --disable-autowatch        Don't automatically start watching changes in files "required" by the program
     -H, --disable-ex-handler       Disable source-map-enhanced uncaught exception handler. You may want to use this option in case your app registers a custom uncaught exception handler
-    -m, --message [string]         Set custom message displayed on restart (default: ">>> RESTARTING <<<")
+    -m, --message [string]         Set custom message displayed on restart (default: ">>> Restarting due to change in file(s): %s")
     --clear-console                If set, will clear console on each restart. Restart message will not be shown
+    --before-restart <command>     Set a custom command to be run before each restart, for example "npm run lint"
+    --no-colors                    Don't use console colors
+    --restart-command <command>    Set a string to issue a manual restart. Set to `false` to pass stdin directly to process. (default: "rs")
     -V, --version                  output the version number
     -h, --help                     display help for command
 ```
