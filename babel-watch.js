@@ -407,7 +407,7 @@ function restartAppInternal() {
     event: 'babel-watch-start',
     pipe: pipeFilename,
     args: program.args,
-    debug: debug,
+    debug,
     handleUncaughtExceptions: !program.disableExHandler,
     transpileExtensions,
   });
