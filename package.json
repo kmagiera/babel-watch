@@ -32,6 +32,7 @@
   "dependencies": {
     "chokidar": "^3.4.3",
     "commander": "^6.2.0",
+    "debug": "^4.3.1",
     "lodash.debounce": "^4.0.8",
     "lodash.isregexp": "^4.0.1",
     "lodash.isstring": "^4.0.1",

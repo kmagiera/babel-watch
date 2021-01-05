@@ -13,6 +13,11 @@ const commander = require('commander');
 const debounce = require('lodash.debounce');
 const isString = require('lodash.isstring');
 const isRegExp = require('lodash.isregexp');
+const Debug = require('debug');
+
+const debugInit = Debug('babel-watch:init');
+const debugCompile = Debug('babel-watch:compile');
+const debugWatcher = Debug('babel-watch:watcher');
 
 const RESTART_COMMAND = 'rs';
 const DEBOUNCE_DURATION = 100; //milliseconds
@@ -84,6 +89,11 @@ program.on('--help', () => {
     $ babel-watch -x templates server.js
     $ babel-watch server.js --port 8080
 
+  Debugging:
+
+  If you want to know which file caused a restart, or why a file was not processed, add
+  \`env DEBUG="babel-watch:*"\` before your command to see babel-watch internals.
+
   See more:
 
   https://github.com/kmagiera/babel-watch
@@ -120,8 +130,10 @@ const watcher = chokidar.watch(program.watch, {
   usePolling: program.usePolling,
 });
 let watcherInitialized = (program.watch.length === 0);
+debugInit('Initializing babel-watch with options: %j', program.opts());
 
 process.on('SIGINT', function() {
+  debugInit('SIGINT caught, closing.');
   watcher.close();
   killApp();
   process.exit(0);
@@ -165,6 +177,7 @@ function handleChange(file) {
     debouncedRestartApp();
   }
   // File was not in use, don't restart
+  debugWatcher('Change detected in file: %s. File used by program and not ignored? %s', file, isUsed);
 }
 
 function generateTempFilename() {
@@ -189,10 +202,12 @@ function handleFileLoad(filename, callback) {
   }
   if (!shouldIgnore(filename)) {
     compile(filename, (err, result) => {
+      debugCompile('Compiled file: %s. Success? %s', filename, !err);
       if (err) {
         // Intentional ignore
         if (err instanceof IgnoredFileError) {
           ignored[filename] = true;
+          debugCompile('File %s ignored due to extension or intentional ignore rule.', filename);
           return callback();
         }
         console.error('Babel compilation error', err.stack);
