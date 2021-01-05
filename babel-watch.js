@@ -35,7 +35,7 @@ function regexify(val) {
 };
 
 function arrayify(val) {
-  if (!val) return [];
+  if (!val) return null;
   if (isString(val)) return (val ? val.split(',') : []);
   if (Array.isArray(val)) return val;
   throw new TypeError("illegal type for arrayify");
@@ -47,15 +47,15 @@ program.option('-d, --debug [port]', 'Set debugger port')
 program.option('-B, --debug-brk', 'Enable debug break mode')
 program.option('-I, --inspect [address]', 'Enable inspect mode')
 program.option('-X, --inspect-brk [address]', 'Enable inspect break mode')
-program.option('-o, --only [globs]', 'Matching files will be transpiled');
-program.option('-i, --ignore [globs]', 'Matching files will not be transpiled. Default value is "node_modules". If you specify this option and still want to exclude modules, be sure to add it to the list.');
-program.option('-e, --extensions [extensions]', 'List of extensions to hook into [.es6,.js,.es,.jsx]');
+program.option('-o, --only [globs]', 'Matching files will *only* be transpiled', arrayify, null);
+program.option('-i, --ignore [globs]', 'Matching files will not be transpiled. Default value is "node_modules". If you specify this option and still want to exclude modules, be sure to add it to the list.', arrayify, ['node_modules']);
+program.option('-e, --extensions [extensions]', 'List of extensions to hook into', arrayify, babel.DEFAULT_EXTENSIONS);
 program.option('-w, --watch [dir]', 'Watch directory "dir" or files. Use once for each directory or file to watch', collect, []);
-program.option('-x, --exclude [dir]', 'Exclude matching directory/files from watcher. Use once for each directory or file.', collect, []);
-program.option('-L, --use-polling', 'In some filesystems watch events may not work correcly. This option enables "polling" which should mitigate this type of issues');
+program.option('-x, --exclude [dir]', 'Exclude matching directory/files from watcher. Use once for each directory or file', collect, []);
+program.option('-L, --use-polling', 'In some filesystems watch events may not work correcly. This option enables "polling" which should mitigate this type of issue');
 program.option('-D, --disable-autowatch', 'Don\'t automatically start watching changes in files "required" by the program');
-program.option('-H, --disable-ex-handler', 'Disable source-map-enhanced uncaught exception handler. (you may want to use this option in case your app registers a custom uncaught exception handler)');
-program.option('-m, --message [string]', 'Set custom message displayed on restart (default is ">>> RESTARTING <<<")');
+program.option('-H, --disable-ex-handler', 'Disable source-map-enhanced uncaught exception handler. You may want to use this option in case your app registers a custom uncaught exception handler');
+program.option('-m, --message [string]', 'Set custom message displayed on restart', '>>> RESTARTING <<<');
 
 const pkg = require('./package.json');
 program.version(pkg.version);
@@ -92,18 +92,10 @@ program.parse(process.argv);
 
 const cwd = process.cwd();
 
-let only = null;
-if (program.only != null) only = arrayify(program.only, regexify);
-let ignore = ['node_modules'];
-if (program.ignore != null) {
-  ignore = arrayify(program.ignore, regexify);
-}
-
-let transpileExtensions = babel.DEFAULT_EXTENSIONS;
-
-if (program.extensions) {
-  transpileExtensions = transpileExtensions.concat(arrayify(program.extensions));
-}
+const only = program.only;
+const ignore = program.ignore;
+const transpileExtensions = program.extensions;
+const restartMessage = program.message;
 
 const mainModule = program.args[0];
 if (!mainModule) {
@@ -268,8 +260,7 @@ function restartApp() {
   if (!watcherInitialized) return;
   if (childApp) {
     // kill app early as `compile` may take a while
-    var restartMessage = program.message ? program.message : ">>> RESTARTING <<<";
-    console.log(restartMessage);
+    if (restartMessage) console.log(restartMessage);
     killApp();
   } else {
     // First start
