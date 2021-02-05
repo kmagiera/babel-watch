@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @flow
 
 'use strict';
 
@@ -34,7 +35,7 @@ function collect(val, memo) {
 // Plucked directly from old Babel Core
 // https://github.com/babel/babel/commit/0df0c696a93889f029982bf36d34346a039b1920
 function regexify(val) {
-  if (!val) return new RegExp;
+  if (!val) return new RegExp('');
   if (Array.isArray(val)) val = val.join("|");
   if (isString(val)) return new RegExp(val || "");
   if (isRegExp(val)) return val;
@@ -204,7 +205,7 @@ function handleChange(file) {
 function generateTempFilename() {
   const now = new Date();
   return path.join(os.tmpdir(), [
-    now.getYear(), now.getMonth(), now.getDate(),
+    now.getFullYear(), now.getMonth(), now.getDate(),
     '-',
     process.pid,
     '-',
@@ -224,7 +225,9 @@ function handleFileLoad(filename, callback) {
   if (!shouldIgnore(filename)) {
     compile(filename, (err, result) => {
       debugCompile('Compiled file: %s. Success? %s', filename, !err);
-      if (err) {
+
+      if (!result && !err) err = new Error('No Result from Babel for file: ' + filename);
+      if (err || !result) {
         // Intentional ignore
         if (err instanceof IgnoredFileError) {
           ignored[filename] = true;
@@ -395,9 +398,9 @@ function restartAppInternal() {
       watcher.add(relativeFilename);
     }
     handleFileLoad(filename, (source, sourceMap) => {
-      const sourceBuf = new Buffer.from(source || '');
-      const mapBuf = new Buffer.from(sourceMap ? JSON.stringify(sourceMap) : []);
-      const lenBuf = new Buffer.alloc(4);
+      const sourceBuf = Buffer.from(source || '');
+      const mapBuf = Buffer.from(sourceMap ? JSON.stringify(sourceMap) : []);
+      const lenBuf = Buffer.alloc(4);
       if (pipeFd) {
         try {
           lenBuf.writeUInt32BE(sourceBuf.length, 0);

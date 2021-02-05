@@ -1,0 +1,2 @@
+[options]
+sharedmemory.heap_size=3221225472

@@ -51,6 +51,7 @@
     "babel-watch": "./babel-watch.js"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.10"
+    "@babel/core": "^7.12.10",
+    "flow-bin": "^0.141.0"
   }
 }
