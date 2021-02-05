@@ -60,7 +60,7 @@ program.option('-B, --debug-brk', 'Enable debug break mode (deprecated)')
 program.option('-I, --inspect [address]', 'Enable inspect mode')
 program.option('-X, --inspect-brk [address]', 'Enable inspect break mode')
 program.option('-o, --only [globs]', 'Matching files will *only* be transpiled', arrayify, null);
-program.option('-i, --ignore [globs]', 'Matching files will not be transpiled. Default value is "node_modules". If you specify this option and still want to exclude modules, be sure to add it to the list.', arrayify, ['node_modules']);
+program.option('-i, --ignore [globs]', 'Matching files will not be transpiled, but will still be watched. Default value is "node_modules". If you specify this option and still want to exclude modules, be sure to add it to the list.', arrayify, ['node_modules']);
 program.option('-e, --extensions [extensions]', 'List of extensions to hook into', arrayify, babel.DEFAULT_EXTENSIONS);
 program.option('-w, --watch [dir]', 'Watch directory "dir" or files. Use once for each directory or file to watch', collect, []);
 program.option('-x, --exclude [dir]', 'Exclude matching directory/files from watcher. Use once for each directory or file', collect, []);
@@ -187,16 +187,17 @@ let changedFiles = [];
 function handleChange(file) {
   const absoluteFile = file.startsWith('/') ? file : path.join(cwd, file);
   const isUsed = Boolean(cache[absoluteFile] || errors[absoluteFile]);
+  const isIgnored = shouldIgnore(file);
   if (isUsed) {
     delete cache[absoluteFile];
     delete errors[absoluteFile];
-
+  }
+  if (!isIgnored) {
     changedFiles.push(file); // for logging
-    // file is in use by the app, let's restart!
+    // file is in use by the app or explicitly watched, let's restart!
     debouncedRestartApp();
   }
-  // File was not in use, don't restart
-  debugWatcher('Change detected in file: %s. File used by program and not ignored? %s', file, isUsed);
+  debugWatcher('Change detected in file: %s. File used by program (%s). File ignored (%s).', file, isUsed, isIgnored);
 }
 
 function generateTempFilename() {

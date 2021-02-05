@@ -47,7 +47,7 @@ Then use `babel-watch` in your `package.json` in scripts section like this:
     -I, --inspect [address]        Enable inspect mode
     -X, --inspect-brk [address]    Enable inspect break mode
     -o, --only [globs]             Matching files will *only* be transpiled (default: null)
-    -i, --ignore [globs]           Matching files will not be transpiled. Default value is "node_modules". If you specify this option and still want to exclude modules, be sure to add it to the list.
+    -i, --ignore [globs]           Matching files will not be transpiled, but will still be watched. Default value is "node_modules". If you specify this option and still want to exclude modules, be sure to add it to the list.
                                    (default: ["node_modules"])
     -e, --extensions [extensions]  List of extensions to hook into (default: [".js",".jsx",".es6",".es",".mjs"])
     -w, --watch [dir]              Watch directory "dir" or files. Use once for each directory or file to watch (default: [])
