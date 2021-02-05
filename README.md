@@ -69,11 +69,14 @@ While the `babel-watch` process is running you may type "rs" and hit return in t
 
 ## Node Options
 
-To pass options directly to Node that are not shown above, use `NODE_OPTIONS`. For example:
+To pass options directly to the Node child that are not shown above, use `BABEL_WATCH_NODE_OPTIONS`. For example:
 
 ```bash
-NODE_OPTIONS="--experimental-worker" babel-watch app.js
+BABEL_WATCH_NODE_OPTIONS="--experimental-worker" babel-watch app.js
 ```
+
+Note not to use `NODE_OPTIONS`. This will apply the options to both the file watcher and the child process, which may have undesired
+effects with certain options like `--inspect`.
 
 ### Example usage:
 

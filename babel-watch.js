@@ -16,6 +16,7 @@ const isString = require('lodash.isstring');
 const isRegExp = require('lodash.isregexp');
 const chalk = require('chalk');
 const Debug = require('debug');
+const stringArgv = require('string-argv').parseArgsStringToArgv;
 
 const debugInit = Debug('babel-watch:init');
 const debugCompile = Debug('babel-watch:compile');
@@ -373,7 +374,17 @@ function restartAppInternal() {
     execSync(program.beforeRestart, {stdio: 'inherit'}); // pass stdio to console
   }
 
-  const app = fork(path.resolve(__dirname, 'runner.js'), { execArgv: runnerExecArgv });
+  // Pass options into execargv for easy use of options like `--trace-exit`.
+  // You can use NODE_OPTIONS to pass the option to both the watcher and the child,
+  // or `BABEL_WATCH_NODE_OPTIONS` to only pass it to the child.
+  if (process.env.BABEL_WATCH_NODE_OPTIONS) {
+    runnerExecArgv.push(...stringArgv(process.env.BABEL_WATCH_NODE_OPTIONS));
+  }
+
+  const runnerPath = path.resolve(__dirname, 'runner.js');
+  const app = fork(runnerPath, {
+    execArgv: runnerExecArgv,
+  });
 
   app.on('message', (data) => {
     if (!data || data.event !== 'babel-watch-filename') return;
@@ -404,6 +415,10 @@ function restartAppInternal() {
         }
       }
     });
+  });
+
+  app.on('exit', (code, signal) => {
+    log('Runner closed with', {code, signal});
   });
 
   app.send({
@@ -451,3 +466,8 @@ function compile(filename, callback) {
 }
 
 restartApp();
+
+
+process.on('unhandledException', (e) => {
+  log('Unhandled exception:', e);
+})
