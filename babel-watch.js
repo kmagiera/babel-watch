@@ -121,7 +121,7 @@ const cwd = process.cwd();
 
 const only = program.only;
 const ignore = program.ignore;
-const transpileExtensions = program.extensions;
+const transpileExtensions = program.extensions.map((ext) => ext.trim());
 const debug = Boolean(program.debug || program.debugBrk || program.inspect || program.inspectBrk)
 
 const mainModule = program.args[0];
