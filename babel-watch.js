@@ -63,7 +63,7 @@ program.option('-I, --inspect [address]', 'Enable inspect mode')
 program.option('-X, --inspect-brk [address]', 'Enable inspect break mode')
 program.option('-o, --only [globs]', 'Matching files will *only* be transpiled', arrayify, null);
 program.option('-i, --ignore [globs]', 'Matching files will not be transpiled, but will still be watched. Default value is "node_modules". If you specify this option and still want to exclude modules, be sure to add it to the list.', arrayify, ['node_modules']);
-program.option('-e, --extensions [extensions]', 'List of extensions to hook into', arrayify, babel.DEFAULT_EXTENSIONS);
+program.option('-e, --extensions [extensions]', 'List of extensions to hook into', arrayify, []);
 program.option('-w, --watch [dir]', 'Watch directory "dir" or files. Use once for each directory or file to watch', collect, []);
 program.option('-x, --exclude [dir]', 'Exclude matching directory/files from watcher. Use once for each directory or file', collect, []);
 program.option('-L, --use-polling', 'In some filesystems watch events may not work correcly. This option enables "polling" which should mitigate this type of issue');
@@ -121,7 +121,8 @@ const cwd = process.cwd();
 
 const only = program.only;
 const ignore = program.ignore;
-const transpileExtensions = program.extensions.map((ext) => ext.trim());
+// We always transpile the default babel extensions. The option only adds more.
+const transpileExtensions = babel.DEFAULT_EXTENSIONS.concat(program.extensions.map((ext) => ext.trim()));
 const debug = Boolean(program.debug || program.debugBrk || program.inspect || program.inspectBrk)
 
 const mainModule = program.args[0];
