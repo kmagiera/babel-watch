@@ -124,6 +124,16 @@ Using `babel-node` or `babel-watch` is not recommended in production environment
 
 *(This is due to the babel's "option manager" API change in `babel-core@6.5.1`)*
 
+## What's the difference between `--ignore` and `--exclude`?
+
+These options seem very similar, and so there is [some confusion](https://github.com/kmagiera/babel-watch/issues/121) about them. The difference is:
+
+* `--ignore` will watch the file, but not transpile it with Babel.
+  * Use if you have JS files in your project that are not transpiled or handled by some other tool, but you still want to restart when they change.
+  * This is called `--ignore` to mirror the Babel option.
+* `--exclude` will not watch the file at all and thus it won't be transpiled either.
+  * Use if you want the watcher to exclude these files entirely. They will not be watched or rebuilt at all. For many projects, judicious use of `--exclude` can really speed things up.
+
 ## Troubleshooting
 
 #### Debugging
@@ -153,7 +163,7 @@ You perhaps are using autowatch. Apparently since view templates are not loaded 
 
 The reason why you're getting the error is because the babel regenerator plugin (that gives you support for async functions) requires a runtime library to be included with your application. You will get the same error when you build your app with `babel` first and then run with `node`. It works fine with `babel-node` because it includes `babel-polyfill` module automatically whenever it runs your app, even if you don't use features like async functions (that's one of the reason why its startup time is so long). Please see [this answer on stackoverflow](http://stackoverflow.com/a/36821986/1665044) to learn how to fix this issue
 
-#### Still having some issues
+#### Still having some issues?
 
 Try searching over the issues on GitHub [here](https://github.com/kmagiera/babel-watch/issues). If you don't find anything that would help feel free to open new issue!
 
