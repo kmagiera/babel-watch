@@ -70,6 +70,7 @@ program.option('-L, --use-polling', 'In some filesystems watch events may not wo
 program.option('-D, --disable-autowatch', 'Don\'t automatically start watching changes in files "required" by the program');
 program.option('-H, --disable-ex-handler', 'Disable source-map-enhanced uncaught exception handler. You may want to use this option in case your app registers a custom uncaught exception handler');
 program.option('-m, --message [string]', 'Set custom message displayed on restart', '>>> Restarting due to change in file(s): %s');
+program.option('-c, --config-file [string]', 'Babel config file path');
 program.option('--clear-console', 'If set, will clear console on each restart. Restart message will not be shown');
 program.option('--before-restart <command>', 'Set a custom command to be run before each restart, for example "npm run lint"');
 program.option('--no-colors', 'Don\'t use console colors');
@@ -121,6 +122,7 @@ const cwd = process.cwd();
 
 const only = program.only;
 const ignore = program.ignore;
+const configFile = program.configFile ? path.resolve(cwd, program.configFile) : undefined;
 // We always transpile the default babel extensions. The option only adds more.
 const transpileExtensions = babel.DEFAULT_EXTENSIONS.concat(program.extensions.map((ext) => ext.trim()));
 const debug = Boolean(program.debug || program.debugBrk || program.inspect || program.inspectBrk)
@@ -451,7 +453,7 @@ function shouldIgnore(filename) {
 }
 
 function compile(filename, callback) {
-  const opts = new babel.OptionManager().init({ filename, ignore, only });
+  const opts = new babel.OptionManager().init({ filename, ignore, only, configFile });
 
   // If opts is not present, the file is ignored, either by explicit input into
   // babel-watch or by `.babelignore`.
