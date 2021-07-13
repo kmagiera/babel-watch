@@ -47,8 +47,7 @@ Then use `babel-watch` in your `package.json` in scripts section like this:
     -I, --inspect [address]        Enable inspect mode
     -X, --inspect-brk [address]    Enable inspect break mode
     -o, --only [globs]             Matching files will *only* be transpiled (default: null)
-    -i, --ignore [globs]           Matching files will not be transpiled, but will still be watched. Default value is "node_modules". If you specify this option and still want to exclude modules, be sure to add it to the list.
-                                   (default: ["node_modules"])
+    -i, --ignore [globs]           Matching files will not be transpiled, but will still be watched. Default value is "node_modules". If you specify this option and still want to exclude modules, be sure to add it to the list. (default: ["node_modules"])
     -e, --extensions [extensions]  List of extensions to hook into (default: [".js",".jsx",".es6",".es",".mjs"])
     -w, --watch [dir]              Watch directory "dir" or files. Use once for each directory or file to watch (default: [])
     -x, --exclude [dir]            Exclude matching directory/files from watcher. Use once for each directory or file (default: [])
@@ -56,6 +55,7 @@ Then use `babel-watch` in your `package.json` in scripts section like this:
     -D, --disable-autowatch        Don't automatically start watching changes in files "required" by the program
     -H, --disable-ex-handler       Disable source-map-enhanced uncaught exception handler. You may want to use this option in case your app registers a custom uncaught exception handler
     -m, --message [string]         Set custom message displayed on restart (default: ">>> Restarting due to change in file(s): %s")
+    -c, --config-file [string]     Babel config file path
     --clear-console                If set, will clear console on each restart. Restart message will not be shown
     --before-restart <command>     Set a custom command to be run before each restart, for example "npm run lint"
     --no-colors                    Don't use console colors
