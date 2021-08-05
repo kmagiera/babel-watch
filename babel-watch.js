@@ -133,7 +133,7 @@ if (!mainModule) {
   console.error('> babel-watch --inspect -- app.js');
   process.exit(1);
 }
-if (!mainModule.startsWith('.') && !mainModule.startsWith('/')) {
+if (!mainModule.startsWith('.') && !path.isAbsolute(mainModule)) {
   program.args[0] = path.join(cwd, mainModule);
 }
 
@@ -190,7 +190,7 @@ const debouncedRestartApp = debounce(restartApp, DEBOUNCE_DURATION);
 let changedFiles = [];
 
 function handleChange(file) {
-  const absoluteFile = file.startsWith('/') ? file : path.join(cwd, file);
+  const absoluteFile = path.isAbsolute(file) ? file : path.join(cwd, file);
   const isUsed = Boolean(cache[absoluteFile] || errors[absoluteFile]);
   const isIgnored = shouldIgnore(file);
   if (isUsed) {
