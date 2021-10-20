@@ -255,47 +255,53 @@ function handleFileLoad(filename, callback) {
   }
 }
 
-function killApp() {
-  if (childApp) {
-    const currentPipeFd = pipeFd;
+function killApp(cb) {
+  // Bail out; not started yet or already killed
+  if (!childApp) {
+    onExit();
+    return;
+  }
 
-    let hasRestarted = false;
-    const restartOnce = () => {
-      if (hasRestarted) return;
-      hasRestarted = true;
-      if (currentPipeFd) {
-        fs.closeSync(currentPipeFd); // silently close pipe fd
-      }
-      if (pipeFilename) {
-        fs.unlinkSync(pipeFilename); // silently remove old pipe file
-      }
-      pipeFd = undefined;
-      childApp = undefined;
-      pipeFilename = undefined;
-      restartAppInternal();
-    };
-    childApp.on('exit', restartOnce);
-    let isRunning = true;
+  function clearState() {
+    if (pipeFd) fs.closeSync(pipeFd); // silently close pipe fd
+    pipeFd = undefined;
+    if (pipeFilename) fs.unlinkSync(pipeFilename); // silently remove old pipe file
+    pipeFilename = undefined;
+    childApp = undefined;
+  }
+
+  function onExit() {
+    clearState();
+    cb && cb();
+  }
+
+  // Are we still running?
+  //
+  // From https://nodejs.org/api/process.html#processkillpid-signal
+  //
+  // This method will throw an error if the target pid does not exist.
+  // As a special case, a signal of 0 can be used to test for the existence of a process.
+  //
+  let isRunning = true;
+  try {
+    process.kill(childApp.pid, 0);
+  } catch (e) {
+    isRunning = false;
+  }
+  if (isRunning) {
+    // Restart once it exits
+    childApp.once('exit', onExit);
+
+    // It's still running. Try to politely kill it.
     try {
-      process.kill(childApp.pid, 0);
-    } catch (e) {
-      isRunning = false;
+      childApp.kill('SIGHUP');
+    } catch (error) {
+      childApp.kill('SIGKILL');
     }
-    if (isRunning) {
-      try {
-        childApp.kill('SIGHUP');
-      } catch (error) {
-        childApp.kill('SIGKILL');
-      }
-      pipeFd = undefined;
-      pipeFilename = undefined;
-      childApp = undefined;
-    } else {
-      pipeFd = undefined;
-      pipeFilename = undefined;
-      childApp = undefined;
-      restartOnce();
-    }
+    // It will restart when the signal comes through
+  } else {
+    // It was dead, so just call back.
+    onExit();
   }
 }
 
@@ -309,12 +315,12 @@ function restartApp() {
       if (message.includes('%s')) message = util.format(message, changedFiles.join(','));
       log(message);
     }
-    // kill app early as `compile` may take a while
-    killApp();
-  } else {
-    // First start
-    restartAppInternal();
   }
+  // kill app early as `compile` may take a while
+  // If this is the first run, it will bail out and call back
+  killApp(() => {
+    restartAppInternal();
+  });
 }
 
 function log(...msg) {
