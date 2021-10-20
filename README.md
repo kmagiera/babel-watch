@@ -58,6 +58,7 @@ Then use `babel-watch` in your `package.json` in scripts section like this:
     -c, --config-file [string]     Babel config file path
     --clear-console                If set, will clear console on each restart. Restart message will not be shown
     --before-restart <command>     Set a custom command to be run before each restart, for example "npm run lint"
+    --restart-timeout <ms>         Set the maximum time to wait before forcing a restart. Useful if your app does graceful cleanup. (default: 2000)
     --no-colors                    Don't use console colors
     --restart-command <command>    Set a string to issue a manual restart. Set to `false` to pass stdin directly to process. (default: "rs")
     --no-debug-source-maps         When using "--inspect" options, inline source-maps are automatically turned on. Set this option to disable that behavior

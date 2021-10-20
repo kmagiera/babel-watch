@@ -73,6 +73,7 @@ program.option('-m, --message [string]', 'Set custom message displayed on restar
 program.option('-c, --config-file [string]', 'Babel config file path');
 program.option('--clear-console', 'If set, will clear console on each restart. Restart message will not be shown');
 program.option('--before-restart <command>', 'Set a custom command to be run before each restart, for example "npm run lint"');
+program.option('--restart-timeout <ms>', 'Set the maximum time to wait before forcing a restart. Useful if your app does graceful cleanup.', 2000);
 program.option('--no-colors', 'Don\'t use console colors');
 program.option('--restart-command <command>', 'Set a string to issue a manual restart. Set to `false` to pass stdin directly to process.', booleanify, 'rs');
 program.option('--no-debug-source-maps', 'When using "--inspect" options, inline source-maps are automatically turned on. Set this option to disable that behavior')
@@ -126,6 +127,7 @@ const configFile = program.configFile ? path.resolve(cwd, program.configFile) : 
 // We always transpile the default babel extensions. The option only adds more.
 const transpileExtensions = babel.DEFAULT_EXTENSIONS.concat(program.extensions.map((ext) => ext.trim()));
 const debug = Boolean(program.debug || program.debugBrk || program.inspect || program.inspectBrk)
+const restartTimeout = Number.isFinite(program.restartTimeout) ? program.restartTimeout : 2000;
 
 const mainModule = program.args[0];
 if (!mainModule) {
@@ -255,7 +257,10 @@ function handleFileLoad(filename, callback) {
   }
 }
 
+// Kills the child app. Accepts a callback if you want to start again
+// once it's dead.
 function killApp(cb) {
+  let exited = false;
   // Bail out; not started yet or already killed
   if (!childApp) {
     onExit();
@@ -271,6 +276,8 @@ function killApp(cb) {
   }
 
   function onExit() {
+    if (exited) return;
+    exited = true;
     clearState();
     cb && cb();
   }
@@ -298,7 +305,20 @@ function killApp(cb) {
     } catch (error) {
       childApp.kill('SIGKILL');
     }
-    // It will restart when the signal comes through
+
+    // It will restart when the signal comes through.
+    // However, if the child is listening to SIGHUP and ignoring it or cleaning up,
+    // set a timer to ensure we do actually call this closed.
+    // Use option `--restart-timeout` to adjust the timeout here.
+    setTimeout(() => {
+      if (exited) return;
+      // Is it still around? If so, make sure it dies.
+      if (childApp) {
+        log('Child app took too long to close. Force-restarting...');
+        childApp.kill('SIGKILL');
+      }
+      onExit();
+    }, restartTimeout);
   } else {
     // It was dead, so just call back.
     onExit();
