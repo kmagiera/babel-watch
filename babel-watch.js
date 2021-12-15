@@ -71,7 +71,7 @@ program.option('-D, --disable-autowatch', 'Don\'t automatically start watching c
 program.option('-H, --disable-ex-handler', 'Disable source-map-enhanced uncaught exception handler. You may want to use this option in case your app registers a custom uncaught exception handler');
 program.option('-m, --message [string]', 'Set custom message displayed on restart', '>>> Restarting due to change in file(s): %s');
 program.option('-c, --config-file [string]', 'Babel config file path');
-program.option('--root-mode [mode]', 'The project-root resolution mode. One of \'root\' (the default), \'upward\', or \'upward-optional\'.');
+program.option('--root-mode [mode]', 'The project-root resolution mode. One of \'root\' (the default), \'upward\', or \'upward-optional\'. See https://babeljs.io/docs/en/options#rootmode');
 program.option('--clear-console', 'If set, will clear console on each restart. Restart message will not be shown');
 program.option('--before-restart <command>', 'Set a custom command to be run before each restart, for example "npm run lint"');
 program.option('--restart-timeout <ms>', 'Set the maximum time to wait before forcing a restart. Useful if your app does graceful cleanup.', 2000);
