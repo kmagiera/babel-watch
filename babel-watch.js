@@ -74,7 +74,7 @@ program.option('-c, --config-file [string]', 'Babel config file path');
 program.option('--root-mode [mode]', 'The project-root resolution mode. One of \'root\' (the default), \'upward\', or \'upward-optional\'. See https://babeljs.io/docs/en/options#rootmode');
 program.option('--clear-console', 'If set, will clear console on each restart. Restart message will not be shown');
 program.option('--before-restart <command>', 'Set a custom command to be run before each restart, for example "npm run lint"');
-program.option('--restart-timeout <ms>', 'Set the maximum time to wait before forcing a restart. Useful if your app does graceful cleanup.', 2000);
+program.option('--restart-timeout <ms>', 'Set the maximum time to wait before forcing a restart. Useful if your app does graceful cleanup.', Number, 2000);
 program.option('--no-colors', 'Don\'t use console colors');
 program.option('--restart-command <command>', 'Set a string to issue a manual restart. Set to `false` to pass stdin directly to process.', booleanify, 'rs');
 program.option('--no-debug-source-maps', 'When using "--inspect" options, inline source-maps are automatically turned on. Set this option to disable that behavior')
