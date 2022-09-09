@@ -18,10 +18,10 @@ const DEFAULT_LOADER = reqExtensions['.js'];
 
 function readLength(fd) {
   let bytes = 0;
-  while (typeof bytes === 'number' && bytes !== 4) {
+  do {
     // $FlowIgnore position can be null
     bytes = fs.readSync(fd, BUFFER, 0, 4, null);
-  }
+  } while (typeof bytes === 'number' && bytes !== 4 && bytes !== 0);
   return BUFFER.readUInt32BE(0);
 }
 
