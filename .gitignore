@@ -35,3 +35,4 @@ node_modules
 # vscode
 # not sure if you want my settings committed to your repo
 .vscode
+.idea
