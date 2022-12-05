@@ -9,7 +9,7 @@ const babel = require('@babel/core');
 const fs = require('fs');
 const os = require('os');
 const fork = require('child_process').fork;
-const onExit = require('signal-exit');
+const onProcessExit = require('signal-exit');
 const util = require('util');
 const execSync = require('child_process').execSync;
 const commander = require('commander');
@@ -158,8 +158,8 @@ let watcherInitialized = (program.watch.length === 0);
 debugInit('Initializing babel-watch with options: %j', program.opts());
 
 
-onExit(function(code, signal) {
-  debugInit(`${signal} caught, closing.`);
+onProcessExit(function(code, signal) {
+  debugInit(`${signal || `exitCode ${code}`} received, closing.`);
   watcher.close();
   killApp();
   process.exit(code || 0);
