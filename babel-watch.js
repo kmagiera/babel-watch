@@ -9,6 +9,7 @@ const babel = require('@babel/core');
 const fs = require('fs');
 const os = require('os');
 const fork = require('child_process').fork;
+const onProcessExit = require('signal-exit');
 const util = require('util');
 const execSync = require('child_process').execSync;
 const commander = require('commander');
@@ -156,12 +157,13 @@ const watcher = chokidar.watch(program.watch, {
 let watcherInitialized = (program.watch.length === 0);
 debugInit('Initializing babel-watch with options: %j', program.opts());
 
-process.on('SIGINT', function() {
-  debugInit('SIGINT caught, closing.');
+
+onProcessExit(function(code, signal) {
+  debugInit(`${signal || `exitCode ${code}`} received, closing.`);
   watcher.close();
   killApp();
-  process.exit(0);
-});
+  process.exit(code || 0);
+})
 
 watcher.on('change', handleChange);
 watcher.on('add', handleChange);
