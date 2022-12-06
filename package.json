@@ -41,7 +41,7 @@
     "lodash.debounce": "^4.0.8",
     "lodash.isregexp": "^4.0.1",
     "lodash.isstring": "^4.0.1",
-    "signal-exit": "^2.1.2",
+    "signal-exit": "^3.0.7",
     "source-map-support": "^0.5.19",
     "string-argv": "^0.3.1"
   },
