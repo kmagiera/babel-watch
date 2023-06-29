@@ -4,7 +4,11 @@
   "description": "Reload your babel-node app on JS source file changes. And do it *fast*.",
   "main": "babel-watch.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "flow && eslint && yarn fmt:check",
+    "flow": "flow",
+    "fmt": "prettier --write ./**.{json,js,yml,md}",
+    "fmt:check": "prettier --check ./**.{json,js,yml,md}"
   },
   "engines": {
     "node": ">= 8"
@@ -41,9 +45,9 @@
     "lodash.debounce": "^4.0.8",
     "lodash.isregexp": "^4.0.1",
     "lodash.isstring": "^4.0.1",
-    "signal-exit": "^3.0.7",
+    "signal-exit": "^4.0.2",
     "source-map-support": "^0.5.19",
-    "string-argv": "^0.3.1"
+    "string-argv": "^0.3.2"
   },
   "peerDependencies": {
     "@babel/core": "^7.0.0"
@@ -52,7 +56,9 @@
     "babel-watch": "./babel-watch.js"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.10",
-    "flow-bin": "^0.141.0"
+    "@babel/core": "^7.22.5",
+    "eslint": "^8.43.0",
+    "flow-bin": "^0.141.0",
+    "prettier": "^2.8.8"
   }
 }

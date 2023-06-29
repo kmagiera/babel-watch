@@ -1,6 +1,6 @@
 # babel-watch
 
-Reload your babel-node app on JS source file changes. And do it *fast*.
+Reload your babel-node app on JS source file changes. And do it _fast_.
 
 ## Why should I use it?
 
@@ -19,11 +19,13 @@ Currently `babel-watch` is supported on Linux, OSX and Windows.
 Just install it and add to your package:
 
 With NPM:
+
 ```bash
   npm install --save-dev babel-watch
 ```
 
 With Yarn:
+
 ```bash
   yarn add --dev babel-watch
 ```
@@ -31,6 +33,7 @@ With Yarn:
 (Make sure you have `@babel/core` installed as dependency in your project as `babel-watch` only defines `@babel/core` as a "peerDependency")
 
 Then use `babel-watch` in your `package.json` in scripts section like this:
+
 ```json
   "scripts": {
     "start": "babel-watch src/main.js"
@@ -119,21 +122,21 @@ Using `babel-node` or `babel-watch` is not recommended in production environment
 
 `babel-watch`'s versions now mirror the major version range of the Babel version it is compatible with. Currently, that is `7.x`.
 
- * `babel-watch >= 2.0.7` (and now `7.x`) is compatible with `@babel/core` version `7.0.0` and above
- * `babel-watch < 2.0.7 && >= 2.0.2` is compatible with `babel-core` version `6.5.1`
- * `babel-watch <= 2.0.1` is compatible with `babel-core` from `6.4.x` up to `6.5.0`
+- `babel-watch >= 2.0.7` (and now `7.x`) is compatible with `@babel/core` version `7.0.0` and above
+- `babel-watch < 2.0.7 && >= 2.0.2` is compatible with `babel-core` version `6.5.1`
+- `babel-watch <= 2.0.1` is compatible with `babel-core` from `6.4.x` up to `6.5.0`
 
-*(This is due to the babel's "option manager" API change in `babel-core@6.5.1`)*
+_(This is due to the babel's "option manager" API change in `babel-core@6.5.1`)_
 
 ## What's the difference between `--ignore` and `--exclude`?
 
 These options seem very similar, and so there is [some confusion](https://github.com/kmagiera/babel-watch/issues/121) about them. The difference is:
 
-* `--ignore` will watch the file, but not transpile it with Babel.
-  * Use if you have JS files in your project that are not transpiled or handled by some other tool, but you still want to restart when they change.
-  * This is called `--ignore` to mirror the Babel option.
-* `--exclude` will not watch the file at all and thus it won't be transpiled either.
-  * Use if you want the watcher to exclude these files entirely. They will not be watched or rebuilt at all. For many projects, judicious use of `--exclude` can really speed things up.
+- `--ignore` will watch the file, but not transpile it with Babel.
+  - Use if you have JS files in your project that are not transpiled or handled by some other tool, but you still want to restart when they change.
+  - This is called `--ignore` to mirror the Babel option.
+- `--exclude` will not watch the file at all and thus it won't be transpiled either.
+  - Use if you want the watcher to exclude these files entirely. They will not be watched or rebuilt at all. For many projects, judicious use of `--exclude` can really speed things up.
 
 ## Troubleshooting
 
@@ -152,7 +155,7 @@ There are a couple of reasons that could be causing that:
 
 You perhaps are using autowatch. Apparently since view templates are not loaded using `require` command but with `fs.read` instead, therefore autowatch is not able to detect that they are being used. You can still use autowatch for all the js sources, but need to specify the directory name where you keep your view templates so that changes in these files can trigger app restart. This can be done using `--watch` option (e.g. `babel-watch --watch views app.js`).
 
-#### I'm getting an error: *Cannot find module '@babel/core'*
+#### I'm getting an error: _Cannot find module '@babel/core'_
 
 `babel-watch` does not have `@babel/core` listed as a direct dependency but as a "peerDependency". If you're using `babel` in your app you should already have `@babel/core` installed. If not you should do `npm install --save-dev @babel/core`. We decided not to make `@babel/core` a direct dependency as in some cases having it defined this way would make your application pull two versions of `@babel/core` from `npm` during installation and since `@babel/core` is quite a huge package that's something we wanted to avoid.
 
