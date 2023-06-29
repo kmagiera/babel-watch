@@ -230,34 +230,34 @@ async function handleFileLoad(filename) {
       return [cache[filename].code, cache[filename].map];
     }
   }
-  if (!shouldIgnore(filename)) {
-    try {
-      const result = await compile(filename)
-      if (!result) {
-        throw new Error('No Result from Babel for file: ' + filename);
-      }
-      debugCompile('Compiled file: %s. Success? true', filename);
-      const stats = fs.statSync(filename);
-      cache[filename] = {
-        code: result.code,
-        map: result.map,
-        mtime: stats.mtime.getTime(),
-      };
-      delete errors[filename];
-      return [result.code, result.map];
-    } catch (err) {
-      debugCompile('Compiled file: %s. Success? false', filename);
-      // Intentional ignore
-      if (err instanceof IgnoredFileError) {
-        ignored[filename] = true;
-        debugCompile('File %s ignored due to extension or intentional ignore rule.', filename);
-        return [];
-      }
+  if (shouldIgnore(filename)) return [];
+
+  try {
+    const result = await compile(filename)
+    if (!result) {
+      throw new Error('No Result from Babel for file: ' + filename);
+    }
+    debugCompile('Compiled file: %s. Success? true', filename);
+    const stats = fs.statSync(filename);
+    cache[filename] = {
+      code: result.code,
+      map: result.map,
+      mtime: stats.mtime.getTime(),
+    };
+    delete errors[filename];
+    return [result.code, result.map];
+  } catch (err) {
+    debugCompile('Compiled file: %s. Success? false', filename);
+    // Intentional ignore
+    if (err instanceof IgnoredFileError) {
+      ignored[filename] = true;
+      debugCompile('File %s ignored due to extension or intentional ignore rule.', filename);
+    } else {
       console.error('Babel compilation error', err.stack);
       errors[filename] = true;
     }
+    return [];
   }
-  return [];
 }
 
 // Kills the child app. Accepts a callback if you want to start again
@@ -431,6 +431,7 @@ function restartAppInternal() {
         watcher.add(relativeFilename);
       }
       const [source, sourceMap] = await handleFileLoad(filename);
+      if (!source) return; // ignored or printed error
       const sourceBuf = Buffer.from(source || '');
       const mapBuf = Buffer.from(sourceMap ? JSON.stringify(sourceMap) : []);
       const lenBuf = Buffer.alloc(4);
