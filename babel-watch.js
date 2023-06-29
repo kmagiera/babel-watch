@@ -134,8 +134,8 @@ const restartTimeout = Number.isFinite(program.restartTimeout) ? program.restart
 
 const mainModule = program.args[0];
 if (!mainModule) {
-  console.error('Main script not specified. If you are using `--inspect` or similar options, please add a `--` like so:');
-  console.error('> babel-watch --inspect -- app.js');
+  logError('Main script not specified. If you are using `--inspect` or similar options, please add a `--` like so:');
+  logError('> babel-watch --inspect -- app.js');
   process.exit(1);
 }
 if (!mainModule.startsWith('.') && !path.isAbsolute(mainModule)) {
@@ -177,15 +177,14 @@ watcher.on('ready', () => {
 });
 
 watcher.on('error', error => {
-  console.error('Watcher failure', error);
+  logError('Watcher failure', error);
   process.exit(1);
 });
 
 // Restart the app when a sequence of keys has been pressed ('rs' by refault)
 if (program.restartCommand) {
-  const stdin = process.stdin;
-  stdin.setEncoding('utf8');
-  stdin.on('data', (data) => {
+  process.stdin.setEncoding('utf8');
+  process.stdin.on('data', (data) => {
     if (String(data).trim() === program.restartCommand) {
       restartApp();
     }
@@ -253,7 +252,7 @@ async function handleFileLoad(filename) {
       ignored[filename] = true;
       debugCompile('File %s ignored due to extension or intentional ignore rule.', filename);
     } else {
-      console.error('Babel compilation error', err.stack);
+      logError('Babel compilation error', err.stack);
       errors[filename] = true;
     }
     return [];
@@ -351,6 +350,11 @@ function log(...msg) {
   console.log(preamble, ...msg);
 }
 
+function logError(...msg) {
+  const preamble = program.colors ? chalk.red.bold.underline('babel-watch:') : '>>> babel-watch:';
+  console.error(preamble, ...msg);
+}
+
 function restartAppInternal() {
   if (Object.keys(errors).length != 0) {
     // There were some transpilation errors, don't start unless solved or invalid file is removed
@@ -364,14 +368,14 @@ function restartAppInternal() {
     try {
       execSync(`echo. > ${pipeFilename}`);
     } catch (e) {
-      console.error(`Unable to create file ${pipeFilename}`);
+      logError(`Unable to create file ${pipeFilename}`);
       process.exit(1);
     }
   } else {
     try {
       execSync(`mkfifo -m 0666 ${pipeFilename}`);
     } catch (e) {
-      console.error('Unable to create named pipe with mkfifo. Are you on linux/OSX?');
+      logError('Unable to create named pipe with mkfifo. Are you on linux/OSX?');
       process.exit(1);
     }
   }
@@ -452,7 +456,7 @@ function restartAppInternal() {
         }
       }
     } catch (err) {
-      console.error(err);
+      logError(err);
       process.exit(1);
     }
   });
