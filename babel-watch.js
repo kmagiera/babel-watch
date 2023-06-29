@@ -222,31 +222,21 @@ function generateTempFilename() {
   ].join(''));
 }
 
-function handleFileLoad(filename, callback) {
+async function handleFileLoad(filename) {
   const cached = cache[filename];
   if (cached) {
     const stats = fs.statSync(filename);
     if (stats.mtime.getTime() === cached.mtime) {
-      callback(cache[filename].code, cache[filename].map);
-      return;
+      return [cache[filename].code, cache[filename].map];
     }
   }
   if (!shouldIgnore(filename)) {
-    compile(filename, (err, result) => {
-      debugCompile('Compiled file: %s. Success? %s', filename, !err);
-
-      if (!result && !err) err = new Error('No Result from Babel for file: ' + filename);
-      if (err || !result) {
-        // Intentional ignore
-        if (err instanceof IgnoredFileError) {
-          ignored[filename] = true;
-          debugCompile('File %s ignored due to extension or intentional ignore rule.', filename);
-          return callback();
-        }
-        console.error('Babel compilation error', err.stack);
-        errors[filename] = true;
-        return;
+    try {
+      const result = await compile(filename)
+      if (!result) {
+        throw new Error('No Result from Babel for file: ' + filename);
       }
+      debugCompile('Compiled file: %s. Success? true', filename);
       const stats = fs.statSync(filename);
       cache[filename] = {
         code: result.code,
@@ -254,11 +244,20 @@ function handleFileLoad(filename, callback) {
         mtime: stats.mtime.getTime(),
       };
       delete errors[filename];
-      callback(result.code, result.map);
-    });
-  } else {
-    callback();
+      return [result.code, result.map];
+    } catch (err) {
+      debugCompile('Compiled file: %s. Success? false', filename);
+      // Intentional ignore
+      if (err instanceof IgnoredFileError) {
+        ignored[filename] = true;
+        debugCompile('File %s ignored due to extension or intentional ignore rule.', filename);
+        return [];
+      }
+      console.error('Babel compilation error', err.stack);
+      errors[filename] = true;
+    }
   }
+  return [];
 }
 
 // Kills the child app. Accepts a callback if you want to start again
@@ -422,7 +421,7 @@ function restartAppInternal() {
     execArgv: runnerExecArgv,
   });
 
-  app.on('message', (data) => {
+  app.on('message', async (data) => {
     try {
       if (!data || data.event !== 'babel-watch-filename') return;
       const filename = data.filename;
@@ -431,27 +430,26 @@ function restartAppInternal() {
         const relativeFilename = path.relative(cwd, filename);
         watcher.add(relativeFilename);
       }
-      handleFileLoad(filename, (source, sourceMap) => {
-        const sourceBuf = Buffer.from(source || '');
-        const mapBuf = Buffer.from(sourceMap ? JSON.stringify(sourceMap) : []);
-        const lenBuf = Buffer.alloc(4);
-        if (pipeFd) {
-          try {
-            lenBuf.writeUInt32BE(sourceBuf.length, 0);
-            fs.writeSync(pipeFd, lenBuf, 0, 4);
-            sourceBuf.length && fs.writeSync(pipeFd, sourceBuf, 0, sourceBuf.length);
+      const [source, sourceMap] = await handleFileLoad(filename);
+      const sourceBuf = Buffer.from(source || '');
+      const mapBuf = Buffer.from(sourceMap ? JSON.stringify(sourceMap) : []);
+      const lenBuf = Buffer.alloc(4);
+      if (pipeFd) {
+        try {
+          lenBuf.writeUInt32BE(sourceBuf.length, 0);
+          fs.writeSync(pipeFd, lenBuf, 0, 4);
+          sourceBuf.length && fs.writeSync(pipeFd, sourceBuf, 0, sourceBuf.length);
 
-            lenBuf.writeUInt32BE(mapBuf.length, 0);
-            fs.writeSync(pipeFd, lenBuf, 0, 4);
-            mapBuf.length && fs.writeSync(pipeFd, mapBuf, 0, mapBuf.length);
-          } catch (error) {
-            // EPIPE means `pipeFd` has been closed. We can ignore this
-            if (error.code !== 'EPIPE') {
-              throw error;
-            }
+          lenBuf.writeUInt32BE(mapBuf.length, 0);
+          fs.writeSync(pipeFd, lenBuf, 0, 4);
+          mapBuf.length && fs.writeSync(pipeFd, mapBuf, 0, mapBuf.length);
+        } catch (error) {
+          // EPIPE means `pipeFd` has been closed. We can ignore this
+          if (error.code !== 'EPIPE') {
+            throw error;
           }
         }
-      });
+      }
     } catch (err) {
       console.error(err);
       process.exit(1);
@@ -487,13 +485,13 @@ function shouldIgnore(filename) {
   return false;
 }
 
-function compile(filename, callback) {
+async function compile(filename) {
   const opts = new babel.OptionManager().init({ filename, ignore, only, configFile, rootMode });
 
   // If opts is not present, the file is ignored, either by explicit input into
   // babel-watch or by `.babelignore`.
   if (!opts) {
-    return callback(new IgnoredFileError());
+    throw new IgnoredFileError();
   }
   // Do not process config files since has already been done with the OptionManager
   // calls above and would introduce duplicates.
@@ -501,9 +499,7 @@ function compile(filename, callback) {
   opts.sourceMaps = (debug && program.debugSourceMaps) ?  'inline' : true;
   opts.ast = false;
 
-  return babel.transformFile(filename, opts, (err, result) => {
-    callback(err, result);
-  });
+  return babel.transformFileAsync(filename, opts)
 }
 
 restartApp();
