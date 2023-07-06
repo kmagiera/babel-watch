@@ -532,7 +532,7 @@ function restartAppInternal() {
         watcher.add(relativeFilename);
       }
       const [source, sourceMap] = await handleFileLoad(filename);
-      if (!source) return; // ignored or printed error
+
       const sourceBuf = Buffer.from(source || "");
       const mapBuf = Buffer.from(sourceMap ? JSON.stringify(sourceMap) : []);
       const lenBuf = Buffer.alloc(4);
