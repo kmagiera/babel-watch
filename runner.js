@@ -4,10 +4,6 @@ const path = require("path");
 const fs = require("fs");
 const sourceMapSupport = require("source-map-support");
 
-process.on("uncaughtException", err => {
-  throw err;
-});
-
 let sources = {};
 let maps = {};
 
